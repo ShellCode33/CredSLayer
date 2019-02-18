@@ -2,11 +2,11 @@
 
 from nce.core import logger
 from scapy.all import *
+from nce.parsers import telnet
 
 
 def session_extractor(pkt):
-    """Extract sessions from packets. Has been taken from here :
-    https://github.com/secdev/scapy/blob/master/scapy/plist.py#L505
+    """Extract sessions from packets.
 
     By default A talking to B and B answering to A are 2 different sessions. We want them to be the same.
     We simply apply an alphabetic sort on IP:PORT to determine which one will go first in the string.
@@ -29,24 +29,30 @@ def session_extractor(pkt):
 
 
 def process_pcap(filename):
-    logger.info("Processing packets in '{}'".format(filename))
-    pcap = rdpcap(filename)
+    logger.debug("Processing packets in '{}'".format(filename))
+    sessions = rdpcap(filename).sessions(session_extractor)
 
-    pcap = pcap.sessions(session_extractor)
+    if "WeDontCare" in sessions:
+        del sessions["WeDontCare"]
 
-    print(pcap)
+    logger.debug("Identified {} session(s) :".format(len(sessions)))
 
-    i = 0
+    for session in sessions:
+        logger.debug("Session: {}".format(session))
+        packets = sessions[session]
 
-    for pkt in pcap:
-        # pkt.show()
-        if hasattr(pkt, "load"):
-            print(pkt.load)
-            print("-" * 30)
-        i += 1
+        # TODO : dynamic calls to all files under 'nce.parsers'
+        credentials = telnet.parse(packets)
 
-        if i == 45:
-            break
+        if credentials != (None, None):
+
+            if credentials[0] is None:
+                logger.info("No username has been found (None)")
+
+            elif credentials[1] is None:
+                logger.info("No password has been found (None)")
+
+            logger.info("The following credentials have been found: '{}' '{}'".format(*credentials))
 
 
 def active_processing(interface):
