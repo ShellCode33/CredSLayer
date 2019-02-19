@@ -43,8 +43,7 @@ def parse(packets):
 
     strings = re.split(r"[\n\r\x00]+", strings)
 
-    username = None
-    password = None
+    username = password = None
 
     # We don't stop the loop even if we find a username/password because
     # if we find others it means a wrong password has been entered
