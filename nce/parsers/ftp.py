@@ -1,12 +1,13 @@
 # coding: utf-8
 
 from nce.core import logger
+import re
 
 
 def parse(packets):
     logger.debug("FTP analysis...")
 
-    strings = []
+    strings = ""
 
     for packet in packets:
 
@@ -17,9 +18,11 @@ def parse(packets):
         # We only want strings, no need to parse bytes with telnet
         try:
             string = packet.load.decode()
-            strings.append(string.replace("\r", "").replace("\n", ""))
+            strings += string
         except UnicodeDecodeError:
             continue
+
+    strings = re.split(r"[\n\r]+", strings)
 
     username = password = None
 
