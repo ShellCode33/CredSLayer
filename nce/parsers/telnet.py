@@ -1,13 +1,32 @@
 # coding: utf-8
 
 from nce.core import logger
+import re
 
 
-# TODO : this has been tested using cooked mode but not raw mode.
+POTENTIAL_USERNAME_ASK = ["login:", "username:", "user:", "name:"]
+
+
+def _is_username_duplicated(username):
+    """
+    Detects if the username has been duplicated because of telnet's echo mode.
+    Duplicated username example : aaddmmiinn
+    Prone to false positives, but very unlikely. Who uses usernames such as the one above ?..
+    """
+
+    if len(username) % 2 == 1:
+        return False
+
+    for i in range(0, len(username), 2):
+        if username[i] != username[i+1]:
+            return False
+
+    return True
+
 
 def parse(packets):
     logger.debug("Telnet analysis...")
-    strings = []
+    strings = ""
 
     for packet in packets:
 
@@ -18,20 +37,29 @@ def parse(packets):
         # We only want strings, no need to parse bytes with telnet
         try:
             string = packet.load.decode()
-            strings.append(string)
+            strings += string
         except UnicodeDecodeError:
             continue
+
+    strings = re.split(r"[\n\r\x00]+", strings)
 
     username = None
     password = None
 
-    for i in range(len(strings)):
-        clean_string = strings[i].strip().lower()
+    # We don't stop the loop even if we find a username/password because
+    # if we find others it means a wrong password has been entered
+    for string in strings:
+        potential_username_tokens = string.split(" ")
 
-        if clean_string.endswith("login:") or clean_string.endswith("username:"):
-            username = strings[i+1].replace("\r", "").replace("\n", "")
+        # -1 is the username, -2 the "asking" part
+        if len(potential_username_tokens) >= 2 and potential_username_tokens[-2] in POTENTIAL_USERNAME_ASK:
+            username = potential_username_tokens[-1]
 
-        elif clean_string.endswith("password:"):
-            password = strings[i+1].replace("\r", "").replace("\n", "")
+            if _is_username_duplicated(username):
+                username = "".join([username[i] for i in range(0, len(username), 2)])
+
+        elif "password:" in string.lower():
+            colon_index = string.find(":")
+            password = string[colon_index+1:]
 
     return username, password
