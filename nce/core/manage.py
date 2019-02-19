@@ -2,7 +2,7 @@
 
 from nce.core import logger
 from scapy.all import *
-from nce.parsers import telnet
+from nce.parsers import parsers
 
 
 def session_extractor(pkt):
@@ -41,18 +41,18 @@ def process_pcap(filename):
         logger.debug("Session: {}".format(session))
         packets = sessions[session]
 
-        # TODO : dynamic calls to all files under 'nce.parsers'
-        credentials = telnet.parse(packets)
+        for parser in parsers:
+            credentials = parser.parse(packets)
 
-        if credentials != (None, None):
+            if credentials != (None, None):
 
-            if credentials[0] is None:
-                logger.info("No username has been found (None)")
+                if credentials[0] is None:
+                    logger.info("No username has been found (None)")
 
-            elif credentials[1] is None:
-                logger.info("No password has been found (None)")
+                elif credentials[1] is None:
+                    logger.info("No password has been found (None)")
 
-            logger.info("The following credentials have been found: '{}' '{}'".format(*credentials))
+                logger.info("The following credentials have been found: '{}' '{}'".format(*credentials))
 
 
 def active_processing(interface):
