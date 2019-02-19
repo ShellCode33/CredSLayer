@@ -35,30 +35,19 @@ def process_pcap(filename):
     if "WeDontCare" in sessions:
         del sessions["WeDontCare"]
 
-    logger.debug("Identified {} session(s) :".format(len(sessions)))
+    logger.info("Identified {} session(s) :".format(len(sessions)))
 
     for session in sessions:
-        logger.debug("Session: {}".format(session))
+        logger.info("Session: {}".format(session))
         packets = sessions[session]
 
         for parser in parsers:
             credentials = parser.parse(packets)
 
             if credentials != (None, None):
-
-                if credentials[0] is None:
-                    logger.info("No username has been found (None)")
-
-                elif credentials[1] is None:
-                    logger.info("No password has been found (None)")
-
-                logger.info("The following credentials have been found: '{}' '{}'".format(*credentials))
-
+                logger.found(*credentials)
                 break  # Credentials have been found in this session, we can skip the other parsers
+
 
 def active_processing(interface):
     logger.info("Listening on {}...".format(interface))
-
-
-if __name__ == "__main__":
-    process_pcap("tests/samples/telnet-cooked.pcap")
