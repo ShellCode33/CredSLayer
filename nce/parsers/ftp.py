@@ -31,7 +31,11 @@ def parse(packets):
     for string in strings:
         if string.startswith("USER"):
             space_index = string.find(" ")
-            username = string[space_index+1:]
+            other_space_index = string.find(" ", space_index+1)
+
+            # We make sure there is only 1 space to prevent IRC false positive
+            if other_space_index == -1:
+                username = string[space_index+1:]
 
         elif string.startswith("PASS"):
             space_index = string.find(" ")
