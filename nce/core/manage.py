@@ -54,6 +54,7 @@ def process_pcap(filename):
 
                 logger.info("The following credentials have been found: '{}' '{}'".format(*credentials))
 
+                break  # Credentials have been found in this session, we can skip the other parsers
 
 def active_processing(interface):
     logger.info("Listening on {}...".format(interface))
