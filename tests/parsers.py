@@ -27,3 +27,23 @@ class ParsersTest(unittest.TestCase):
         ftp_pcap = rdpcap("samples/ftp.pcap")
         credentials = ftp.parse(ftp_pcap)
         self.assertTrue(credentials == ('anonymous', 'ftp@example.com'))
+
+    def test_irc(self):
+        from nce.parsers import irc
+        from nce.core.manage import session_extractor
+
+        irc_pcap = rdpcap("samples/irc1.pcap")
+        credentials = irc.parse(irc_pcap)
+        self.assertTrue(credentials == ('THE-USER', None))
+
+        irc_pcap = rdpcap("samples/irc2.pcap")
+        sessions = list(irc_pcap.sessions(session_extractor).values())
+
+        credentials = irc.parse(sessions[0])
+        self.assertTrue(credentials == ('Matir', None))
+
+        credentials = irc.parse(sessions[1])
+        self.assertTrue(credentials == ('andrewg', None))
+
+        credentials = irc.parse(sessions[2])
+        self.assertTrue(credentials == ('itsl0wk3y', None))
