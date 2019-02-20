@@ -22,10 +22,13 @@ def error(msg):
     print("{}[ERROR]{} {}".format(Color.RED, Color.RESET, msg))
 
 
-def found(username, password):
+def found(type, username, password):
     if username is None:
-        print("{}{}[FOUND]{} Password found: {}".format(Color.WHITE, Color.BACKGROUND_RED, Color.RESET, password))
+        print("{}{}[FOUND]{} {} password found: {}".format(Color.WHITE, Color.BACKGROUND_RED,
+                                                           Color.RESET, type.upper(), password))
     elif password is None:
-        print("{}{}[FOUND]{} Username found: {}".format(Color.WHITE, Color.BACKGROUND_RED, Color.RESET, username))
+        print("{}{}[FOUND]{} {} username found: {}".format(Color.WHITE, Color.BACKGROUND_RED,
+                                                           Color.RESET, type.upper(), username))
     else:
-        print("{}{}[FOUND]{} Credentials found: {} -- {}".format(Color.WHITE, Color.BACKGROUND_RED, Color.RESET, username, password))
+        print("{}{}[FOUND]{} {} credentials found: {} -- {}".format(Color.WHITE, Color.BACKGROUND_RED,
+                                                                    Color.RESET, type.upper(), username, password))
