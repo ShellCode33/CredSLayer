@@ -24,21 +24,27 @@ def parse(packets):
 
     strings = re.split(r"[\n\r]+", strings)
 
+    ftp_confirmed = False
     username = password = None
 
     # We don't stop the loop even if USER and PASS have been found in case a wrong password has been entered
     # Plus the fact that sometimes the USER statement can be duplicated
     for string in strings:
+
+        # When establishing a new connection to an FTP server, to tell the user the server is ready, it will send a 220
+        # We check that to prevent false positives with IRC
+        if string.startswith("220"):
+            ftp_confirmed = True
+
         if string.startswith("USER"):
             space_index = string.find(" ")
-            other_space_index = string.find(" ", space_index+1)
-
-            # We make sure there is only 1 space to prevent IRC false positive
-            if other_space_index == -1:
-                username = string[space_index+1:]
+            username = string[space_index+1:]
 
         elif string.startswith("PASS"):
             space_index = string.find(" ")
             password = string[space_index + 1:]
+
+    if not ftp_confirmed:
+        return None, None
 
     return username, password
