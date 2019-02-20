@@ -35,7 +35,7 @@ def process_pcap(filename):
     if "WeDontCare" in sessions:
         del sessions["WeDontCare"]
 
-    logger.info("Identified {} session(s) :".format(len(sessions)))
+    logger.info("Identified {} session(s)".format(len(sessions)))
 
     for session in sessions:
         logger.info("Session: {}".format(session))
@@ -45,7 +45,7 @@ def process_pcap(filename):
             credentials = parser.parse(packets)
 
             if credentials != (None, None):
-                logger.found(*credentials)
+                logger.found(parser.__name__.split(".")[-1], *credentials)
                 break  # Credentials have been found in this session, we can skip the other parsers
 
 
