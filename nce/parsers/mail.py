@@ -58,7 +58,7 @@ def analyse(packets):
 
         elif tokens[1] == "LOGIN":
             username = tokens[2][1:-1]  # [1:-1] to remove " " surrounding the credentials
-            password = "".join(tokens[3:])[1:-1]  # we join what's left in `tokens` because a space could be in the pass
+            password = " ".join(tokens[3:])[1:-1]  # join what's left in `tokens` because a space could be in the pass
     # --------------------------------------------------------
 
     # TODO : POP3
