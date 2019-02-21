@@ -1,6 +1,8 @@
 # coding: utf-8
 
+from scapy.plist import PacketList
 from nce.core import logger, utils
+from nce.core.utils import CredentialsList, Credentials
 import re
 
 
@@ -24,10 +26,10 @@ def _is_username_duplicated(username):
     return True
 
 
-def analyse(packets):
+def analyse(packets: PacketList) -> CredentialsList:
     logger.debug("Telnet analysis...")
 
-    credentials = []
+    all_credentials = []
     strings = utils.extract_strings_from(packets)
     strings = "".join(strings)
 
@@ -52,6 +54,6 @@ def analyse(packets):
             password = string[colon_index+1:]
 
     if username is not None or password is not None:
-        credentials.append((username, password))
+        all_credentials.append(Credentials(username, password))
 
-    return credentials
+    return all_credentials

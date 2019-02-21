@@ -5,7 +5,7 @@ from scapy.all import *
 from nce.parsers import parsers
 
 
-def process_pcap(filename):
+def process_pcap(filename: str):
     logger.debug("Processing packets in '{}'".format(filename))
     sessions = rdpcap(filename).sessions(utils.session_extractor)
 
@@ -25,10 +25,10 @@ def process_pcap(filename):
                 module_name = parser.__name__.split(".")[-1].upper()
 
                 for cred in credentials:
-                    logger.found(module_name, *cred)
+                    logger.found(module_name, cred)
 
                 break  # Credentials have been found in this session, we can skip the other parsers
 
 
-def active_processing(interface):
+def active_processing(interface: str):
     logger.info("Listening on {}...".format(interface))

@@ -1,6 +1,14 @@
 # coding: utf-8
+
+from collections import namedtuple
+from typing import List
+
 from scapy.packet import Packet
 from scapy.plist import PacketList
+
+
+Credentials = namedtuple('Credentials', ['username', 'password'])
+CredentialsList = List[Credentials]
 
 
 def session_extractor(pkt: Packet) -> str:

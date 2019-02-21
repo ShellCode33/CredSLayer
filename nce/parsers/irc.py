@@ -1,14 +1,17 @@
 # coding: utf-8
+
+from scapy.plist import PacketList
+from nce.core import logger, utils
+from nce.core.utils import CredentialsList, Credentials
 import re
 
-from nce.core import logger, utils
 
+def analyse(packets: PacketList) -> CredentialsList:
 
-def analyse(packets):
     logger.debug("IRC analysis...")
 
     nick = None
-    credentials = []
+    all_credentials = []
     strings = utils.extract_strings_from(packets)
     strings = "".join(strings)
     strings = re.split(r"[\n\r]+", strings)
@@ -18,22 +21,22 @@ def analyse(packets):
 
         if tokens[0] == "NICK":
             if nick:
-                credentials.append((nick, None))
+                all_credentials.append(Credentials(nick, None))
 
             nick = tokens[1]
 
         match = re.search(r":IDENTIFY (.+?)", string, re.IGNORECASE)
 
         if match:
-            credentials.append((nick, match[1]))
+            all_credentials.append(Credentials(nick, match[1]))
             nick = None
 
         if tokens[0] == "OPER":
             username = tokens[1]
             password = " ".join(tokens[2:])  # Password could contain spaces
-            credentials.append((username, password))
+            all_credentials.append(Credentials(username, password))
 
     if nick:
-        credentials.append((nick, None))
+        all_credentials.append(Credentials(nick, None))
 
-    return credentials
+    return all_credentials

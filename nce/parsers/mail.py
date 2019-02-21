@@ -1,14 +1,17 @@
 # coding: utf-8
 import re
 
+
+from scapy.plist import PacketList
 from nce.core import logger, utils
+from nce.core.utils import CredentialsList, Credentials
 from base64 import b64decode
 
 
-def analyse(packets):
+def analyse(packets: PacketList) -> CredentialsList:
     logger.debug("Mail analysis...")
 
-    credentials = []
+    all_credentials = []
     strings = utils.extract_strings_from(packets)
     strings = "".join(strings)
     strings = re.split(r"[\n\r]+", strings)
@@ -23,7 +26,7 @@ def analyse(packets):
 
         elif auth_process:
             if string.startswith("235"):
-                credentials.append((username, password))
+                all_credentials.append(Credentials(username, password))
                 break
 
             elif not string.startswith("334"):
@@ -43,7 +46,7 @@ def analyse(packets):
             continue
 
         if tokens[1] == "OK" and tokens[2] == "LOGIN" and username is not None and password is not None:
-            credentials.append((username, password))
+            all_credentials.append(Credentials(username, password))
             break
 
         elif tokens[1] == "LOGIN":
@@ -53,6 +56,6 @@ def analyse(packets):
 
     # TODO : POP3
 
-    return credentials
+    return all_credentials
 
 

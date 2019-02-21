@@ -1,10 +1,12 @@
 # coding: utf-8
 
+from scapy.plist import PacketList
 from nce.core import logger, utils
+from nce.core.utils import CredentialsList, Credentials
 import re
 
 
-def analyse(packets):
+def analyse(packets: PacketList) -> CredentialsList:
     logger.debug("FTP analysis...")
 
     strings = utils.extract_strings_from(packets)
@@ -12,7 +14,7 @@ def analyse(packets):
     strings = re.split(r"[\n\r]+", strings)
 
     username = password = None
-    credentials = []
+    all_credentials = []
 
     # We don't stop the loop even if USER and PASS have been found in case a wrong password has been entered
     # Plus the fact that sometimes the USER statement can be duplicated
@@ -20,7 +22,7 @@ def analyse(packets):
 
         # Connection successful (also prevents false positives with IRC)
         if string.startswith("230"):
-            credentials.append((username, password))
+            all_credentials.append(Credentials(username, password))
             username = password = None
 
         elif string.startswith("USER"):
@@ -31,4 +33,4 @@ def analyse(packets):
             space_index = string.find(" ")
             password = string[space_index + 1:]
 
-    return credentials
+    return all_credentials
