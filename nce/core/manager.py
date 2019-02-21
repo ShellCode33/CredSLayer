@@ -1,36 +1,13 @@
 # coding: utf-8
 
-from nce.core import logger
+from nce.core import logger, utils
 from scapy.all import *
 from nce.parsers import parsers
 
 
-def session_extractor(pkt):
-    """Extract sessions from packets.
-
-    By default A talking to B and B answering to A are 2 different sessions. We want them to be the same.
-    We simply apply an alphabetic sort on IP:PORT to determine which one will go first in the string.
-    """
-
-    if "IP" in pkt:
-        pkt_type = "IP"
-    elif "IPv6" in pkt:
-        pkt_type = "IPv6"
-    else:
-        return "WeDontCare"
-
-    src = "{}:{}".format(pkt[pkt_type].src, pkt[pkt_type].sport)
-    dst = "{}:{}".format(pkt[pkt_type].dst, pkt[pkt_type].dport)
-
-    if src < dst:
-        return src + " | " + dst
-    else:
-        return dst + " | " + src
-
-
 def process_pcap(filename):
     logger.debug("Processing packets in '{}'".format(filename))
-    sessions = rdpcap(filename).sessions(session_extractor)
+    sessions = rdpcap(filename).sessions(utils.session_extractor)
 
     if "WeDontCare" in sessions:
         del sessions["WeDontCare"]

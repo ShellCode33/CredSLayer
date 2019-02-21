@@ -1,7 +1,7 @@
 # coding: utf-8
 import re
 
-from nce.core import logger
+from nce.core import logger, utils
 
 
 def analyse(packets):
@@ -9,38 +9,29 @@ def analyse(packets):
 
     nick = None
     credentials = []
+    strings = utils.extract_strings_from(packets)
+    strings = "".join(strings)
+    strings = re.split(r"[\n\r]+", strings)
 
-    for packet in packets:
+    for string in strings:
+        tokens = string.split(" ")
 
-        # If there is no payload in that packet, we're not interested
-        if not hasattr(packet, "load"):
-            continue
+        if tokens[0] == "NICK":
+            if nick:
+                credentials.append((nick, None))
 
-        # We only want strings, no need to parse bytes with telnet
-        try:
-            string = packet.load.decode()
+            nick = tokens[1]
 
-            match = re.search(r"NICK (.+?)(\r?\n|\s)", string)
+        match = re.search(r":IDENTIFY (.+?)", string, re.IGNORECASE)
 
-            if match:
-                if nick:
-                    credentials.append((nick, None))
+        if match:
+            credentials.append((nick, match[1]))
+            nick = None
 
-                nick = match[1]
-
-            match = re.search(r":IDENTIFY (.+?)(\r?\n|\s)", string, re.IGNORECASE)
-
-            if match:
-                credentials.append((nick, match[1]))
-                nick = None
-
-            match = re.search(r"OPER (.+) (.+?)(\r?\n|\s)", string)
-
-            if match:
-                credentials.append((match[1], match[2]))
-
-        except UnicodeDecodeError:
-                continue
+        if tokens[0] == "OPER":
+            username = tokens[1]
+            password = " ".join(tokens[2:])  # Password could contain spaces
+            credentials.append((username, password))
 
     if nick:
         credentials.append((nick, None))

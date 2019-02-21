@@ -1,6 +1,6 @@
 # coding: utf-8
 
-from nce.core import logger
+from nce.core import logger, utils
 import re
 
 
@@ -28,20 +28,8 @@ def analyse(packets):
     logger.debug("Telnet analysis...")
 
     credentials = []
-    strings = ""
-
-    for packet in packets:
-
-        # If there is no payload in that packet, we're not interested
-        if not hasattr(packet, "load"):
-            continue
-
-        # We only want strings, no need to parse bytes with telnet
-        try:
-            string = packet.load.decode()
-            strings += string
-        except UnicodeDecodeError:
-            continue
+    strings = utils.extract_strings_from(packets)
+    strings = "".join(strings)
 
     strings = re.split(r"[\n\r\x00]+", strings)
 
