@@ -21,7 +21,7 @@ def analyse(packets: PacketList) -> CredentialsList:
 
         if tokens[0] == "NICK":
             if nick:
-                all_credentials.append(Credentials(nick, None))
+                all_credentials.append(Credentials(nick))
 
             nick = tokens[1]
 
@@ -37,6 +37,6 @@ def analyse(packets: PacketList) -> CredentialsList:
             all_credentials.append(Credentials(username, password))
 
     if nick:
-        all_credentials.append(Credentials(nick, None))
+        all_credentials.append(Credentials(nick))
 
     return all_credentials

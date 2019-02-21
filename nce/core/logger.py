@@ -24,6 +24,10 @@ def error(msg: str):
 
 
 def found(module_name: str, credentials: Credentials):
+
+    if credentials.username is None and credentials.password is None:
+        raise Exception("Bug detected, empty credentials.")
+
     if credentials.username is None:
         print("{}{}[FOUND]{} {} password found: {}".format(Color.WHITE, Color.BACKGROUND_RED,
                                                            Color.RESET, module_name.upper(), credentials.password))

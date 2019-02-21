@@ -21,7 +21,7 @@ def analyse(packets: PacketList) -> CredentialsList:
     for string in strings:
 
         # Connection successful (also prevents false positives with IRC)
-        if string.startswith("230"):
+        if string.startswith("230") and (username is not None or password is not None):
             all_credentials.append(Credentials(username, password))
             username = password = None
 

@@ -8,6 +8,7 @@ from scapy.plist import PacketList
 
 
 Credentials = namedtuple('Credentials', ['username', 'password'])
+Credentials.__new__.__defaults__ = (None,) * len(Credentials._fields)  # Create username and password default values
 CredentialsList = List[Credentials]
 
 
@@ -35,6 +36,8 @@ def session_extractor(pkt: Packet) -> str:
 
 
 def extract_strings_from(packets: PacketList) -> list:
+    """Build a list of strings from packets' payload.
+    """
 
     strings = []
 
