@@ -42,10 +42,14 @@ def process_pcap(filename):
         packets = sessions[session]
 
         for parser in parsers:
-            credentials = parser.parse(packets)
+            credentials = parser.analyse(packets)
 
-            if credentials != (None, None):
-                logger.found(parser.__name__.split(".")[-1], *credentials)
+            if len(credentials) > 0:
+                module_name = parser.__name__.split(".")[-1].upper()
+
+                for cred in credentials:
+                    logger.found(module_name, *cred)
+
                 break  # Credentials have been found in this session, we can skip the other parsers
 
 

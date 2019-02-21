@@ -3,6 +3,6 @@
 from nce.core import logger
 
 
-def parse(packets):
+def analyse(packets):
     logger.debug("Mail analysis...")
-    return None, None
+    return []

@@ -4,10 +4,11 @@ import re
 from nce.core import logger
 
 
-def parse(packets):
+def analyse(packets):
     logger.debug("IRC analysis...")
 
-    username = password = None
+    nick = None
+    credentials = []
 
     for packet in packets:
 
@@ -22,20 +23,26 @@ def parse(packets):
             match = re.search(r"NICK (.+?)(\r?\n|\s)", string)
 
             if match:
-                username = match[1]
+                if nick:
+                    credentials.append((nick, None))
+
+                nick = match[1]
 
             match = re.search(r":IDENTIFY (.+?)(\r?\n|\s)", string, re.IGNORECASE)
 
             if match:
-                password = match[1]
+                credentials.append((nick, match[1]))
+                nick = None
 
             match = re.search(r"OPER (.+) (.+?)(\r?\n|\s)", string)
 
             if match:
-                username = match[1]
-                password = match[2]
+                credentials.append((match[1], match[2]))
 
         except UnicodeDecodeError:
                 continue
 
-    return username, password
+    if nick:
+        credentials.append((nick, None))
+
+    return credentials

@@ -24,8 +24,10 @@ def _is_username_duplicated(username):
     return True
 
 
-def parse(packets):
+def analyse(packets):
     logger.debug("Telnet analysis...")
+
+    credentials = []
     strings = ""
 
     for packet in packets:
@@ -61,4 +63,7 @@ def parse(packets):
             colon_index = string.find(":")
             password = string[colon_index+1:]
 
-    return username, password
+    if username is not None or password is not None:
+        credentials.append((username, password))
+
+    return credentials

@@ -3,6 +3,6 @@
 from nce.core import logger
 
 
-def parse(packets):
+def analyse(packets):
     logger.debug("HTTP analysis...")
-    return None, None
+    return []
