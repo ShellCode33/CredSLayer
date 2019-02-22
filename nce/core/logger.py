@@ -25,16 +25,18 @@ def error(msg: str):
 
 def found(module_name: str, credentials: Credentials):
 
-    if credentials.username is None and credentials.password is None:
-        raise Exception("Bug detected, empty credentials.")
+    if credentials.hash is not None:
+        print("{}{}[FOUND]{} {} hash found: {}".format(Color.WHITE, Color.BACKGROUND_RED,
+                                                       Color.RESET, module_name.upper(), credentials.hash))
 
-    if credentials.username is None:
-        print("{}{}[FOUND]{} {} password found: {}".format(Color.WHITE, Color.BACKGROUND_RED,
-                                                           Color.RESET, module_name.upper(), credentials.password))
-    elif credentials.password is None:
-        print("{}{}[FOUND]{} {} username found: {}".format(Color.WHITE, Color.BACKGROUND_RED,
-                                                           Color.RESET, module_name.upper(), credentials.username))
-    else:
+    if credentials.username is not None and credentials.password is not None:
         print("{}{}[FOUND]{} {} credentials found: {} -- {}".format(Color.WHITE, Color.BACKGROUND_RED,
                                                                     Color.RESET, module_name.upper(),
                                                                     credentials.username, credentials.password))
+
+    elif credentials.password is not None:
+        print("{}{}[FOUND]{} {} password found: {}".format(Color.WHITE, Color.BACKGROUND_RED,
+                                                           Color.RESET, module_name.upper(), credentials.password))
+    elif credentials.username is not None:
+        print("{}{}[FOUND]{} {} username found: {}".format(Color.WHITE, Color.BACKGROUND_RED,
+                                                           Color.RESET, module_name.upper(), credentials.username))

@@ -7,7 +7,7 @@ from scapy.packet import Packet
 from scapy.plist import PacketList
 
 
-Credentials = namedtuple('Credentials', ['username', 'password'])
+Credentials = namedtuple('Credentials', ['username', 'password', 'hash'])
 Credentials.__new__.__defaults__ = (None,) * len(Credentials._fields)  # Create username and password default values
 CredentialsList = List[Credentials]
 
