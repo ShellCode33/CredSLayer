@@ -50,8 +50,14 @@ def analyse(packets: PacketList) -> CredentialsList:
                 username = "".join([username[i] for i in range(0, len(username), 2)])
 
         elif "password:" in string.lower():
-            colon_index = string.find(":")
-            password = string[colon_index+1:]
+            begin_pass_index = string.find(":") + 1
+
+            # Prone to false positives, but sometimes the telnet server sends "password:" and sometimes "password: "
+            # We're just hoping the password doesn't start with a space...
+            if string[begin_pass_index] == " ":
+                begin_pass_index += 1
+
+            password = string[begin_pass_index:]
 
     if username is not None or password is not None:
         all_credentials.append(Credentials(username, password))

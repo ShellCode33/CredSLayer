@@ -1,5 +1,5 @@
 # coding: utf-8
-
+import re
 from collections import namedtuple
 from typing import List
 
@@ -35,7 +35,7 @@ def session_extractor(pkt: Packet) -> str:
         return dst + " | " + src
 
 
-def extract_strings_from(packets: PacketList) -> list:
+def extract_strings_from(packets: PacketList) -> List[str]:
     """Build a list of strings from packets' payload.
     """
 
@@ -50,7 +50,16 @@ def extract_strings_from(packets: PacketList) -> list:
         try:
             string = packet.load.decode()
             strings.append(string)
+
         except UnicodeDecodeError:
-            continue
+            # If non-unicode data were in the packet's payload, we try to split on \r or \n and see if we have strings
+            potential_strings = re.split(b"[\n\r]+", packet.load)
+
+            for potential_string in potential_strings:
+                try:
+                    string = potential_string.decode()
+                    strings.append(string)
+                except UnicodeDecodeError:
+                    pass
 
     return strings

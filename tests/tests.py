@@ -22,6 +22,10 @@ class ParsersTest(unittest.TestCase):
         credentials = telnet.analyse(telnet_pcap)
         self.assertTrue(credentials == [('fake', 'user')])
 
+        telnet_pcap = rdpcap("samples/telnet-raw2.pcap")
+        credentials = telnet.analyse(telnet_pcap)
+        self.assertTrue(credentials == [('Administrator', 'napier')])
+
     def test_ftp(self):
         ftp_pcap = rdpcap("samples/ftp.pcap")
         credentials = ftp.analyse(ftp_pcap)
@@ -58,6 +62,13 @@ class ParsersTest(unittest.TestCase):
             self.assertTrue(len(parser.analyse(pcap)) == 0)
 
         pcap = rdpcap("samples/telnet-raw.pcap")
+        parsers_filtered = parsers.copy()
+        parsers_filtered.remove(telnet)
+
+        for parser in parsers_filtered:
+            self.assertTrue(len(parser.analyse(pcap)) == 0)
+
+        pcap = rdpcap("samples/telnet-raw2.pcap")
         parsers_filtered = parsers.copy()
         parsers_filtered.remove(telnet)
 
