@@ -1,6 +1,6 @@
 # coding: utf-8
 
-from nce.core import logger, utils
+from nce.core import logger, utils, extract
 from scapy.all import *
 from nce.parsers import parsers
 
@@ -17,6 +17,15 @@ def process_pcap(filename: str):
     for session in sessions:
         logger.info("Session: {}".format(session))
         packets = sessions[session]
+
+        emails_found = extract.extract_emails(packets)
+        credit_cards_found = extract.extract_credit_cards(packets)
+
+        for email in emails_found:
+            logger.info("Found email address: " + email)
+
+        for credit_card in credit_cards_found:
+            logger.info("Found credit card number: " + credit_card)
 
         for parser in parsers:
             credentials = parser.analyse(packets)

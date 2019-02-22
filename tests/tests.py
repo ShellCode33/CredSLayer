@@ -1,6 +1,8 @@
 import unittest
 from scapy.all import *
 
+from nce.core import extract
+from nce.core.utils import Credentials
 from nce.parsers import parsers
 from nce.parsers import telnet, irc, ftp, mail
 
@@ -15,40 +17,42 @@ class ParsersTest(unittest.TestCase):
 
     def test_telnet(self):
         telnet_pcap = rdpcap("samples/telnet-cooked.pcap")
-        credentials = telnet.analyse(telnet_pcap)
-        self.assertTrue(credentials == [('fake', 'user')])
+        credentials_list = telnet.analyse(telnet_pcap)
+        self.assertTrue(Credentials('fake', 'user') in credentials_list)
 
         telnet_pcap = rdpcap("samples/telnet-raw.pcap")
-        credentials = telnet.analyse(telnet_pcap)
-        self.assertTrue(credentials == [('fake', 'user')])
+        credentials_list = telnet.analyse(telnet_pcap)
+        self.assertTrue(Credentials('fake', 'user') in credentials_list)
 
         telnet_pcap = rdpcap("samples/telnet-raw2.pcap")
-        credentials = telnet.analyse(telnet_pcap)
-        self.assertTrue(credentials == [('Administrator', 'napier')])
+        credentials_list = telnet.analyse(telnet_pcap)
+        self.assertTrue(Credentials('Administrator', 'napier') in credentials_list)
 
     def test_ftp(self):
         ftp_pcap = rdpcap("samples/ftp.pcap")
-        credentials = ftp.analyse(ftp_pcap)
-        self.assertTrue(credentials == [('anonymous', 'ftp@example.com')])
+        credentials_list = ftp.analyse(ftp_pcap)
+        self.assertTrue(Credentials('anonymous', 'ftp@example.com') in credentials_list)
 
     def test_irc(self):
         irc_pcap = rdpcap("samples/irc1.pcap")
-        credentials = irc.analyse(irc_pcap)
-        self.assertTrue(credentials == [('THE-USER', None)])
+        credentials_list = irc.analyse(irc_pcap)
+        self.assertTrue(Credentials('THE-USER') in credentials_list)
 
         irc_pcap = rdpcap("samples/irc2.pcap")
-        credentials = irc.analyse(irc_pcap)
-        self.assertTrue(credentials == [('Matir', None), ('andrewg', None), ('itsl0wk3y', None)])
+        credentials_list = irc.analyse(irc_pcap)
+        self.assertTrue(Credentials('Matir') in credentials_list)
+        self.assertTrue(Credentials('andrewg') in credentials_list)
+        self.assertTrue(Credentials('itsl0wk3y') in credentials_list)
 
     def test_smtp(self):
         pcap_smtp = rdpcap("samples/smtp.pcap")
-        credentials = mail.analyse(pcap_smtp)
-        self.assertTrue(credentials == [('gurpartap@patriots.in', 'punjab@123')])
+        credentials_list = mail.analyse(pcap_smtp)
+        self.assertTrue(Credentials('gurpartap@patriots.in', 'punjab@123') in credentials_list)
 
     def test_imap(self):
         pcap_smtp = rdpcap("samples/imap.pcap")
-        credentials = mail.analyse(pcap_smtp)
-        self.assertTrue(credentials == [('neulingern', 'XXXXXX')])
+        credentials_list = mail.analyse(pcap_smtp)
+        self.assertTrue(Credentials('neulingern', 'XXXXXX') in credentials_list)
 
     def test_pop(self):
         pass
@@ -110,6 +114,34 @@ class ParsersTest(unittest.TestCase):
         for parser in parsers_filtered:
             self.assertTrue(len(parser.analyse(pcap)) == 0)
 
+
+class ExtractTest(unittest.TestCase):
+
+    def setUp(self):
+        # Set the working directory to the script's directory
+        abspath = os.path.abspath(__file__)
+        directory = os.path.dirname(abspath)
+        os.chdir(directory)
+
+    def test_extract_emails(self):
+        pcap = rdpcap("samples/imap.pcap")
+        emails_found = extract.extract_emails(pcap)
+        self.assertTrue("nutmeg12s@hotmail.com" in emails_found)
+        self.assertTrue("SharpJDs@yahoo.com" in emails_found)
+        self.assertTrue("hardcase_890@yahoo.com" in emails_found)
+        self.assertTrue("bandy_34@hotmail.com" in emails_found)
+
+    def test_extract_credit_cards(self):
+        pcap = rdpcap("samples/smtp-creditcards.pcap")
+        credit_cards_found = extract.extract_credit_cards(pcap)
+        self.assertTrue("4321444432143212" in credit_cards_found)
+        self.assertTrue("5555555555555555" in credit_cards_found)
+        self.assertTrue("4111400043213210" in credit_cards_found)
+
+        # TODO : check false positives
+        # pcap = rdpcap("samples/imap.pcap")
+        # credit_cards_found = extract.extract_credit_cards(pcap)
+        # self.assertTrue(len(credit_cards_found) == 0)
 
 class SessionsTest(unittest.TestCase):
 

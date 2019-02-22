@@ -19,8 +19,11 @@ def analyse(packets: PacketList) -> CredentialsList:
     auth_process = False
     username = password = None
 
+    # Note : yes we loop through strings multiple times, it's not very efficient, but it's the best way to avoid false-
+
     # ------------------------  SMTP  ------------------------
     for string in strings:
+
         if string.startswith("AUTH"):
             auth_process = True
 
@@ -57,5 +60,3 @@ def analyse(packets: PacketList) -> CredentialsList:
     # TODO : POP3
 
     return all_credentials
-
-
