@@ -55,7 +55,9 @@ class ParsersTest(unittest.TestCase):
         self.assertTrue(Credentials('neulingern', 'XXXXXX') in credentials_list)
 
     def test_pop(self):
-        pass
+        pcap_pop = rdpcap("samples/pop3.pcap")
+        credentials_list = mail.analyse(pcap_pop)
+        self.assert_(Credentials('digitalinvestigator@networksims.com', 'napier123') in credentials_list)
 
     def test_false_positives(self):
         pcap = rdpcap("samples/telnet-cooked.pcap")
@@ -108,6 +110,13 @@ class ParsersTest(unittest.TestCase):
             self.assertTrue(len(parser.analyse(pcap)) == 0)
 
         pcap = rdpcap("samples/imap.pcap")
+        parsers_filtered = parsers.copy()
+        parsers_filtered.remove(mail)
+
+        for parser in parsers_filtered:
+            self.assertTrue(len(parser.analyse(pcap)) == 0)
+
+        pcap = rdpcap("samples/pop3.pcap")
         parsers_filtered = parsers.copy()
         parsers_filtered.remove(mail)
 
