@@ -8,5 +8,5 @@ _modules = [os.path.splitext(_file)[0] for _file in os.listdir(_script_dir) if n
 parsers = []
 
 for module in _modules:
-    module = import_module("nce.parsers." + module)
+    module = import_module("ncm.parsers." + module)
     parsers.append(module)

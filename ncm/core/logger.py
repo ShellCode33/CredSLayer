@@ -1,5 +1,5 @@
 # coding: utf-8
-from nce.core.utils import Credentials
+from ncm.core.utils import Credentials
 
 
 class Color(object):

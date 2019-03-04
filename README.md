@@ -3,11 +3,11 @@
 ![alt python_version](https://img.shields.io/badge/python-3.5+-informational.svg)
 ![alt tests_coverage](https://img.shields.io/badge/tests%20coverage-94%25-success.svg)
 
-NCE goal is to look for credentials and other useful stuff in network captures. Two modes are available, pcap scanning and active processing. The latest listens for packets on a chosen interface and dynamically extracts everything it can.
+NCM goal is to look for credentials and other useful stuff in network captures. Two modes are available, pcap scanning and active processing. The latest listens for packets on a chosen interface and dynamically extracts everything it can.
 
 This tool is really helpful if you're a pentester or if you want to scan your own network to see if anything critical is sent over the network. 
 
-NCE is a complete rewrite of NetCreds and PCredz. It is written using Python3 and aims to be way more extensible and easier to maintain. 
+NCM is a complete rewrite of NetCreds and PCredz. It is written using Python3 and aims to be way more extensible and easier to maintain. 
 
 It is also heavily tested to prevent any unexpected behavior. Those tests also check false positives between parsers (even if it can't be fully prevented). 
 

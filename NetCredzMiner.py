@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 # coding: utf-8
 
-from nce.core import manager, logger
+from ncm.core import manager, logger
 import argcomplete
 import argparse
 import traceback

@@ -1,8 +1,8 @@
 # coding: utf-8
 
 from scapy.plist import PacketList
-from nce.core import logger, utils
-from nce.core.utils import CredentialsList, Credentials
+from ncm.core import logger, utils
+from ncm.core.utils import CredentialsList, Credentials
 import re
 
 

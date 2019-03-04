@@ -1,8 +1,8 @@
 # coding: utf-8
 
-from nce.core import logger, utils, extract
+from ncm.core import logger, utils, extract
 from scapy.all import *
-from nce.parsers import parsers
+from ncm.parsers import parsers
 
 
 def process_pcap(filename: str):

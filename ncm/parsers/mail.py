@@ -4,8 +4,8 @@ import re
 
 
 from scapy.plist import PacketList
-from nce.core import logger, utils, extract
-from nce.core.utils import CredentialsList, Credentials
+from ncm.core import logger, utils, extract
+from ncm.core.utils import CredentialsList, Credentials
 from base64 import b64decode
 
 

@@ -1,7 +1,7 @@
 # coding: utf-8
 
 from scapy.plist import PacketList
-from nce.core import utils
+from ncm.core import utils
 from typing import Set
 import re
 

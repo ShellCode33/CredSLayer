@@ -1,9 +1,9 @@
 import unittest
 from scapy.all import *
 
-from nce.core import extract
-from nce.core.utils import Credentials
-from nce.parsers import parsers, telnet, irc, ftp, mail, http
+from ncm.core import extract
+from ncm.core.utils import Credentials
+from ncm.parsers import parsers, telnet, irc, ftp, mail, http
 
 
 class ParsersTest(unittest.TestCase):
@@ -169,7 +169,7 @@ class SessionsTest(unittest.TestCase):
         os.chdir(directory)
 
     def test_sessions_extract(self):
-        from nce.core.utils import session_extractor
+        from ncm.core.utils import session_extractor
 
         pcap = rdpcap("samples/irc1.pcap")
         sessions = pcap.sessions(session_extractor)

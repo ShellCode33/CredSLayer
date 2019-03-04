@@ -6,8 +6,8 @@ from typing import List
 from scapy.plist import PacketList
 from scapy_http.http import HTTP, HTTPRequest, HTTPResponse
 
-from nce.core import logger
-from nce.core.utils import CredentialsList, Credentials
+from ncm.core import logger
+from ncm.core.utils import CredentialsList, Credentials
 
 HTTP_IGNORED_EXTENSIONS = ["css", "ico", "png", "jpg", "jpeg", "gif"]
 HTTP_METHODS = ["OPTIONS", "GET", "HEAD", "POST", "PUT", "DELETE", "TRACE", "CONNECT"]
