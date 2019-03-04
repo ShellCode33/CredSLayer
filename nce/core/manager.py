@@ -6,8 +6,10 @@ from nce.parsers import parsers
 
 
 def process_pcap(filename: str):
+
+    pcap = rdpcap(filename)
     logger.debug("Processing packets in '{}'".format(filename))
-    sessions = rdpcap(filename).sessions(utils.session_extractor)
+    sessions = pcap.sessions(utils.session_extractor)
 
     if "WeDontCare" in sessions:
         del sessions["WeDontCare"]

@@ -58,7 +58,9 @@ def extract_strings_from(packets: PacketList) -> List[str]:
             for potential_string in potential_strings:
                 try:
                     string = potential_string.decode()
-                    strings.append(string)
+
+                    if len(string) > 0:
+                        strings.append(string)
                 except UnicodeDecodeError:
                     pass
 
