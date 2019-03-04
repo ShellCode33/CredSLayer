@@ -1,9 +1,10 @@
 #!/usr/bin/python3
 # coding: utf-8
 
-from nce.core import manager
+from nce.core import manager, logger
 import argcomplete
 import argparse
+import traceback
 
 if __name__ == "__main__":
 
@@ -15,9 +16,23 @@ if __name__ == "__main__":
     parser.add_argument('-l', '--listen',
                         help='start active processing on specified interface',
                         metavar='INTERFACE')
+    parser.add_argument('-d', '--disable-url-logging',
+                        help='disable URL logging, can be spammy')
 
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
 
     for pcap in args.pcapfiles:
-        manager.process_pcap(pcap)
+
+        try:
+            manager.process_pcap(pcap)
+        except Exception as e:
+            error_str = str(e)
+
+            if error_str.startswith("[Errno"):  # Clean error message
+                errno_end_index = error_str.find("]") + 2
+                error_str = error_str[errno_end_index:]
+                logger.error(error_str)
+
+            else:
+                traceback.print_exc()
