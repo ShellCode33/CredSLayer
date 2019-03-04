@@ -1,4 +1,4 @@
-# NetCredzExtractor
+# NetCredzMiner
 
 ![alt python_version](https://img.shields.io/badge/python-3.5+-informational.svg)
 ![alt tests_coverage](https://img.shields.io/badge/tests%20coverage-94%25-success.svg)
