@@ -3,8 +3,7 @@ from scapy.all import *
 
 from nce.core import extract
 from nce.core.utils import Credentials
-from nce.parsers import parsers
-from nce.parsers import telnet, irc, ftp, mail
+from nce.parsers import parsers, telnet, irc, ftp, mail, http
 
 
 class ParsersTest(unittest.TestCase):
@@ -58,6 +57,14 @@ class ParsersTest(unittest.TestCase):
         pcap_pop = rdpcap("samples/pop3.pcap")
         credentials_list = mail.analyse(pcap_pop)
         self.assertTrue(Credentials('digitalinvestigator@networksims.com', 'napier123') in credentials_list)
+
+    def test_http_basic_auth(self):
+        pcap_http = rdpcap("samples/http-basic-auth.pcap")
+        credentials_list = http.analyse(pcap_http)
+        self.assertTrue(Credentials('test', 'test') in credentials_list)
+        self.assertFalse(Credentials('test', 'fail') in credentials_list)
+        self.assertFalse(Credentials('test', 'fail2') in credentials_list)
+        self.assertFalse(Credentials('test', 'fail3') in credentials_list)
 
     def test_false_positives(self):
         pcap = rdpcap("samples/telnet-cooked.pcap")
@@ -151,6 +158,7 @@ class ExtractTest(unittest.TestCase):
         # pcap = rdpcap("samples/imap.pcap")
         # credit_cards_found = extract.extract_credit_cards(pcap)
         # self.assertTrue(len(credit_cards_found) == 0)
+
 
 class SessionsTest(unittest.TestCase):
 

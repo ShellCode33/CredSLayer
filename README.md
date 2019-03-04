@@ -18,8 +18,9 @@ NetCredzExtractor is able to extract credentials in the following protocols:
 * IRC
 * SMTP / IMAP / POP3
 * Telnet
+* HTTP
 
-It is also able to look for email addresses and credit card numbers.
+It is also able to look for email addresses, credit card numbers, visited URLs.
 
 # Credits
 
