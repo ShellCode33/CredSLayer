@@ -2,6 +2,7 @@
 
 import base64
 from typing import List
+from urllib.parse import urlparse, parse_qs
 
 from scapy.plist import PacketList
 from scapy_http.http import HTTP, HTTPRequest, HTTPResponse
@@ -11,6 +12,10 @@ from ncm.core.utils import CredentialsList, Credentials
 
 HTTP_IGNORED_EXTENSIONS = ["css", "ico", "png", "jpg", "jpeg", "gif"]
 HTTP_METHODS = ["OPTIONS", "GET", "HEAD", "POST", "PUT", "DELETE", "TRACE", "CONNECT"]
+
+HTTP_AUTH_MAX_LOGIN_POST_LENGTH = 500  # We ignore every posted content exceeding that length to prevent false positives
+HTTP_AUTH_POTENTIAL_USERNAMES = ["username", "login", "user"]
+HTTP_AUTH_POTENTIAL_PASSWORDS = ["password", "pass"]
 
 
 def _extract_http_requests(packets: PacketList) -> List[HTTPRequest]:
@@ -27,7 +32,7 @@ def _extract_http_requests(packets: PacketList) -> List[HTTPRequest]:
             continue
 
         elif HTTPResponse in packet and current_request is not None:
-            current_request.status_code = int(getattr(packet, "Status-Line").decode().split(" ")[1])
+            current_request.resp_status_code = int(getattr(packet, "Status-Line").decode().split(" ")[1])
             http_requests.append(current_request)
             current_request = None
             continue
@@ -44,7 +49,7 @@ def _extract_http_requests(packets: PacketList) -> List[HTTPRequest]:
             current_request = potential_http_packet
 
         elif class_type == HTTPResponse:
-            current_request.status_code = int(packet.load.decode().split(" ")[1])
+            current_request.resp_status_code = int(packet.load.decode().split(" ")[1])
             http_requests.append(current_request)
             current_request = None
 
@@ -69,12 +74,36 @@ def analyse(packets: PacketList) -> CredentialsList:
         if http_request.Method == b"POST":
             try:
                 post_content = http_request.load.decode()
-                logger.info("POST data found: '{}'".format(post_content))
-                # TODO: look for credentials in POST data
+
+                if len(post_content) <= HTTP_AUTH_MAX_LOGIN_POST_LENGTH:
+                    logger.info("POST data found: '{}'".format(post_content))
+                    get_parameters = parse_qs(post_content)
+
+                    username = password = None
+
+                    for parameter in get_parameters:
+                        if parameter in HTTP_AUTH_POTENTIAL_USERNAMES:
+                            username = get_parameters[parameter][0]
+                        elif parameter in HTTP_AUTH_POTENTIAL_PASSWORDS:
+                            password = get_parameters[parameter][0]
+
+                    all_credentials.append(Credentials(username, password))
+
             except UnicodeDecodeError:  # Posted data can be raw bytes (e.g. images)
                 pass
 
-        # TODO: look for credentials in GET request
+        if http_request.Method == b"GET":
+            get_parameters = parse_qs(urlparse(http_request.Path.decode()).query)
+
+            username = password = None
+
+            for parameter in get_parameters:
+                if parameter in HTTP_AUTH_POTENTIAL_USERNAMES:
+                    username = get_parameters[parameter][0]
+                elif parameter in HTTP_AUTH_POTENTIAL_PASSWORDS:
+                    password = get_parameters[parameter][0]
+
+            all_credentials.append(Credentials(username, password))
 
         if http_request.Authorization is not None:
             authorization_header = http_request.Authorization.decode()
@@ -87,7 +116,7 @@ def analyse(packets: PacketList) -> CredentialsList:
                     credentials = base64.b64decode(credentials).decode()
                     colon_index = credentials.find(":")
 
-                    if http_request.status_code != 401:
+                    if http_request.resp_status_code != 401:
                         all_credentials.append(Credentials(credentials[:colon_index], credentials[colon_index + 1:]))
 
                 except UnicodeDecodeError:

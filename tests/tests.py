@@ -66,6 +66,16 @@ class ParsersTest(unittest.TestCase):
         self.assertFalse(Credentials('test', 'fail2') in credentials_list)
         self.assertFalse(Credentials('test', 'fail3') in credentials_list)
 
+    def test_http_post_auth(self):
+        pcap_http = rdpcap("samples/http-post-auth.pcap")
+        credentials_list = http.analyse(pcap_http)
+        self.assertTrue(Credentials('toto', 'Str0ngP4ssw0rd') in credentials_list)
+
+    def test_http_get_auth(self):
+        pcap_http = rdpcap("samples/http-get-auth.pcap")
+        credentials_list = http.analyse(pcap_http)
+        self.assertTrue(Credentials('admin', 'qwerty1234') in credentials_list)
+
     def test_false_positives(self):
         pcap = rdpcap("samples/telnet-cooked.pcap")
         parsers_filtered = parsers.copy()
