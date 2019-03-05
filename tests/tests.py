@@ -140,6 +140,27 @@ class ParsersTest(unittest.TestCase):
         for parser in parsers_filtered:
             self.assertTrue(len(parser.analyse(pcap)) == 0)
 
+        pcap = rdpcap("samples/http-basic-auth.pcap")
+        parsers_filtered = parsers.copy()
+        parsers_filtered.remove(http)
+
+        for parser in parsers_filtered:
+            self.assertTrue(len(parser.analyse(pcap)) == 0)
+
+        pcap = rdpcap("samples/http-post-auth.pcap")
+        parsers_filtered = parsers.copy()
+        parsers_filtered.remove(http)
+
+        for parser in parsers_filtered:
+            self.assertTrue(len(parser.analyse(pcap)) == 0)
+
+        pcap = rdpcap("samples/http-get-auth.pcap")
+        parsers_filtered = parsers.copy()
+        parsers_filtered.remove(http)
+
+        for parser in parsers_filtered:
+            self.assertTrue(len(parser.analyse(pcap)) == 0)
+
 
 class ExtractTest(unittest.TestCase):
 
