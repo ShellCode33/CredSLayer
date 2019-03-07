@@ -2,7 +2,7 @@ import unittest
 from scapy.all import *
 
 from ncm.core import extract
-from ncm.core.utils import Credentials
+from ncm.core.utils import Credentials, CreditCard
 from ncm.parsers import parsers, telnet, irc, ftp, mail, http
 
 
@@ -181,10 +181,9 @@ class ExtractTest(unittest.TestCase):
     def test_extract_credit_cards(self):
         pcap = rdpcap("samples/smtp-creditcards.pcap")
         credit_cards_found = extract.extract_credit_cards(pcap)
-        print(credit_cards_found)
-        self.assertTrue("4111-4000-4321-3210" in credit_cards_found)
-        self.assertTrue("5555 5555 5555 5555" in credit_cards_found)
-        self.assertTrue("4321 4444 3214 3212" in credit_cards_found)
+        self.assertTrue(CreditCard("Visa", "4111-4000-4321-3210") in credit_cards_found)
+        self.assertTrue(CreditCard("Visa", "4321 4444 3214 3212") in credit_cards_found)
+        self.assertTrue(CreditCard("Mastercard", "5555 5555 5555 5555") in credit_cards_found)
 
     def test_credit_cards_false_positives(self):
         pcap = rdpcap("samples/imap.pcap")

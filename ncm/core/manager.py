@@ -27,7 +27,7 @@ def process_pcap(filename: str):
             logger.info("Found email address: " + email)
 
         for credit_card in credit_cards_found:
-            logger.info("Found credit card number: " + credit_card)
+            logger.info("Credit card '{}' found: '{}'".format(credit_card.name, credit_card.number))
 
         for parser in parsers:
             credentials = parser.analyse(packets)

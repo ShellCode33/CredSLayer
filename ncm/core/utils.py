@@ -11,6 +11,8 @@ Credentials = namedtuple('Credentials', ['username', 'password', 'hash'])
 Credentials.__new__.__defaults__ = (None,) * len(Credentials._fields)  # Create username and password default values
 CredentialsList = List[Credentials]
 
+CreditCard = namedtuple("CreditCard", ['name', 'number'])
+
 
 def session_extractor(pkt: Packet) -> str:
     """Extract sessions from packets.
