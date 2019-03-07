@@ -181,14 +181,15 @@ class ExtractTest(unittest.TestCase):
     def test_extract_credit_cards(self):
         pcap = rdpcap("samples/smtp-creditcards.pcap")
         credit_cards_found = extract.extract_credit_cards(pcap)
-        self.assertTrue("4321444432143212" in credit_cards_found)
-        self.assertTrue("5555555555555555" in credit_cards_found)
-        self.assertTrue("4111400043213210" in credit_cards_found)
+        print(credit_cards_found)
+        self.assertTrue("4111-4000-4321-3210" in credit_cards_found)
+        self.assertTrue("5555 5555 5555 5555" in credit_cards_found)
+        self.assertTrue("4321 4444 3214 3212" in credit_cards_found)
 
-        # TODO : check false positives
-        # pcap = rdpcap("samples/imap.pcap")
-        # credit_cards_found = extract.extract_credit_cards(pcap)
-        # self.assertTrue(len(credit_cards_found) == 0)
+    def test_credit_cards_false_positives(self):
+        pcap = rdpcap("samples/imap.pcap")
+        credit_cards_found = extract.extract_credit_cards(pcap)
+        self.assertTrue(len(credit_cards_found) == 0)
 
 
 class SessionsTest(unittest.TestCase):
