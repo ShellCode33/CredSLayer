@@ -3,7 +3,7 @@ from scapy.all import *
 
 from ncm.core import extract
 from ncm.core.utils import Credentials, CreditCard
-from ncm.parsers import parsers, telnet, irc, ftp, mail, http
+from ncm.parsers import parsers, telnet, irc, ftp, mail, http, ldap
 
 
 class ParsersTest(unittest.TestCase):
@@ -75,6 +75,13 @@ class ParsersTest(unittest.TestCase):
         pcap_http = rdpcap("samples/http-get-auth.pcap")
         credentials_list = http.analyse(pcap_http)
         self.assertTrue(Credentials('admin', 'qwerty1234') in credentials_list)
+
+    def test_ldap(self):
+        pcap_ldap = rdpcap("samples/ldap-simpleauth.pcap")
+        credentials_list = ldap.analyse(pcap_ldap)
+        self.assertTrue(Credentials("xxxxxxxxxxx@xx.xxx.xxxxx.net", "passwor8d1") in credentials_list)
+        self.assertTrue(Credentials("CN=xxxxxxxx,OU=Users,OU=Accounts,DC=xx,"
+                                    "DC=xxx,DC=xxxxx,DC=net", "/dev/rdsk/c0t0d0s0") in credentials_list)
 
     def test_false_positives(self):
         pcap = rdpcap("samples/telnet-cooked.pcap")
@@ -161,6 +168,13 @@ class ParsersTest(unittest.TestCase):
         for parser in parsers_filtered:
             self.assertTrue(len(parser.analyse(pcap)) == 0)
 
+        pcap = rdpcap("samples/ldap-simpleauth.pcap")
+        parsers_filtered = parsers.copy()
+        parsers_filtered.remove(ldap)
+
+        for parser in parsers_filtered:
+            self.assertTrue(len(parser.analyse(pcap)) == 0)
+
 
 class ExtractTest(unittest.TestCase):
 
@@ -177,6 +191,10 @@ class ExtractTest(unittest.TestCase):
         self.assertTrue("SharpJDs@yahoo.com" in emails_found)
         self.assertTrue("hardcase_890@yahoo.com" in emails_found)
         self.assertTrue("bandy_34@hotmail.com" in emails_found)
+
+        pcap = rdpcap("samples/ldap-simpleauth.pcap")
+        emails_found = extract.extract_emails(pcap)
+        self.assertTrue("xxxxxxxxxxx@xx.xxx.xxxxx.net" in emails_found)
 
     def test_extract_credit_cards(self):
         pcap = rdpcap("samples/smtp-creditcards.pcap")
