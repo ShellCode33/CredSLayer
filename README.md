@@ -5,7 +5,7 @@
 
 NCM goal is to look for credentials and other useful stuff in network captures. Two modes are available, pcap scanning and active processing. The latest listens for packets on a chosen interface and dynamically extracts everything it can.
 
-This tool is really helpful if you're a pentester or if you want to scan your own network to see if anything critical is sent over the network. 
+This tool is really helpful if you're a pentester or if you want to scan your own network to see if anything critical is sent over it. 
 
 NCM is a complete rewrite of NetCreds and PCredz. It is written using Python3 and aims to be way more extensible and easier to maintain. 
 
@@ -13,12 +13,13 @@ It is also heavily tested to prevent any unexpected behavior. Those tests also c
 
 # Features
 
-NetCredzExtractor is able to extract credentials in the following protocols:
+NetCredzMiner is able to extract credentials in the following protocols:
 * FTP
 * IRC
 * SMTP / IMAP / POP3
 * Telnet
 * HTTP
+* LDAP
 
 It is also able to look for email addresses, credit card numbers, visited URLs.
 

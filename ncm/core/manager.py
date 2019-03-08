@@ -1,5 +1,6 @@
 # coding: utf-8
 
+import time
 from ncm.core import logger, utils, extract
 from scapy.all import *
 from ncm.parsers import parsers
@@ -7,6 +8,7 @@ from ncm.parsers import parsers
 
 def process_pcap(filename: str):
 
+    start_time = time.time()
     pcap = rdpcap(filename)
     logger.debug("Processing packets in '{}'".format(filename))
     sessions = pcap.sessions(utils.session_extractor)
@@ -39,6 +41,8 @@ def process_pcap(filename: str):
                     logger.found(module_name, cred)
 
                 break  # Credentials have been found in this session, we can skip the other parsers
+
+    logger.info("Processing done in {}.".format(time.time()-start_time))
 
 
 def active_processing(interface: str):
