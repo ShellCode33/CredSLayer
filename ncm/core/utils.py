@@ -1,17 +1,20 @@
 # coding: utf-8
+
 import re
 from collections import namedtuple
 from typing import List
+from string import printable as printable_charset
 
 from scapy.packet import Packet
 from scapy.plist import PacketList
-
 
 Credentials = namedtuple('Credentials', ['username', 'password', 'hash'])
 Credentials.__new__.__defaults__ = (None,) * len(Credentials._fields)  # Create username and password default values
 CredentialsList = List[Credentials]
 
 CreditCard = namedtuple("CreditCard", ['name', 'number'])
+
+STRING_EXTRACT_REGEX = re.compile(b"[^" + printable_charset.encode() + b"]+")
 
 
 def session_extractor(pkt: Packet) -> str:
@@ -51,19 +54,32 @@ def extract_strings_from(packets: PacketList) -> List[str]:
 
         try:
             string = packet.load.decode()
-            strings.append(string)
+
+            if len(string) > 0:
+                strings.append(string)
 
         except UnicodeDecodeError:
-            # If non-unicode data were in the packet's payload, we try to split on \r or \n and see if we have strings
-            potential_strings = re.split(b"[\n\r]+", packet.load)
+            # If non-unicode data were in the packet's payload, we try to split on non-printable bytes and ...
+            potential_strings = re.split(STRING_EXTRACT_REGEX, packet.load)
 
             for potential_string in potential_strings:
                 try:
                     string = potential_string.decode()
 
-                    if len(string) > 0:
+                    if len(string) > 3:  # ... we extract strings at least 4 characters long
                         strings.append(string)
+
                 except UnicodeDecodeError:
                     pass
 
     return strings
+
+
+def extract_strings_splitted_on_new_lines_from(packets: PacketList) -> List[str]:
+    """Builds a list of strings that are separated by a new line character. It's very useful when working with
+    text-based protocol that use new lines to delimit messages (IRC, FTP, Telnet, ...).
+    """
+
+    strings = extract_strings_from(packets)
+    strings = "".join(strings)
+    return re.split("[\r\n]+", strings)

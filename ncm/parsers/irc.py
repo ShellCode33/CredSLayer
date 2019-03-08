@@ -12,9 +12,7 @@ def analyse(packets: PacketList) -> CredentialsList:
 
     nick = None
     all_credentials = []
-    strings = utils.extract_strings_from(packets)
-    strings = "".join(strings)
-    strings = re.split(r"[\n\r]+", strings)
+    strings = utils.extract_strings_splitted_on_new_lines_from(packets)
 
     for string in strings:
         tokens = string.split(" ")

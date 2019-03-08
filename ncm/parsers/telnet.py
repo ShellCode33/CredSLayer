@@ -3,7 +3,6 @@
 from scapy.plist import PacketList
 from ncm.core import logger, utils
 from ncm.core.utils import CredentialsList, Credentials
-import re
 
 
 POTENTIAL_USERNAME_ASK = ["login:", "username:", "user:", "name:"]
@@ -30,10 +29,7 @@ def analyse(packets: PacketList) -> CredentialsList:
     logger.debug("Telnet analysis...")
 
     all_credentials = []
-    strings = utils.extract_strings_from(packets)
-    strings = "".join(strings)
-
-    strings = re.split(r"[\n\r\x00]+", strings)
+    strings = utils.extract_strings_splitted_on_new_lines_from(packets)
 
     username = password = None
 
