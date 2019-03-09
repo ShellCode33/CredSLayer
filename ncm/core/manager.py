@@ -1,6 +1,5 @@
 # coding: utf-8
 
-import time
 from ncm.core import logger, utils, extract
 from scapy.all import *
 from ncm.parsers import parsers
@@ -42,7 +41,7 @@ def process_pcap(filename: str):
 
                 break  # Credentials have been found in this session, we can skip the other parsers
 
-    logger.info("Processing done in {}.".format(time.time()-start_time))
+    logger.info("Processed in {0:.3f} seconds.".format(time.time()-start_time))
 
 
 def active_processing(interface: str):

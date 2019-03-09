@@ -31,6 +31,9 @@ def session_extractor(pkt: Packet) -> str:
     else:
         return "WeDontCare"
 
+    if not hasattr(pkt[pkt_type], "sport") or not hasattr(pkt[pkt_type], "dport"):
+        return "WeDontCare"
+
     src = "{}:{}".format(pkt[pkt_type].src, pkt[pkt_type].sport)
     dst = "{}:{}".format(pkt[pkt_type].dst, pkt[pkt_type].dport)
 
