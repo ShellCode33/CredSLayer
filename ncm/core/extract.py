@@ -7,10 +7,8 @@ import re
 from ncm.core import utils
 from ncm.core.utils import CreditCard
 
-email_regex = re.compile(
-    r"(?:[-!#$%&'*+/=?^_`{}|~0-9A-Z]+(?:\.[-!#$%&'*+/=?^_`{}|~0-9A-Z]+)*"  # dot-atom
-    r'|^"(?:[\001-\010\013\014\016-\037!#-\[\]-\177]|\\[\001-\011\013\014\016-\177])*"'  # quoted-string
-    r')@(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+[A-Z]{2,6}', re.IGNORECASE)  # domain
+# This regex has been made in order to prevent false positives, theoretically it can miss a few addresses.
+email_regex = re.compile(r'(?:\t| |^|<|,|:)([^+\x00-\x20@<>/\\{}`^\'*:;=()%\[\]"][^\x00-\x20@<>/\\{}`^\'*:;=()%\[\]"]{1,63}@(?:[A-Za-z0-9]{2,63}\.)+[A-Za-z]{2,6})')
 
 # Tries to match things that look like a credit card.
 # Things like 11111111-11111111 will also match, that's why there's a second step to validate that data.
