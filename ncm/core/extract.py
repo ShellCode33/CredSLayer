@@ -44,7 +44,7 @@ credit_cards_already_found = set()
 
 def extract_emails(packets: PacketList) -> Set:
     emails = set()
-    strings = utils.extract_strings_splitted_on_new_lines_from(packets)
+    strings = utils.extract_strings_splitted_on_end_of_line_from(packets)
 
     for string in strings:
         emails_found = email_regex.findall(string)
@@ -60,7 +60,7 @@ def extract_emails(packets: PacketList) -> Set:
 
 def extract_credit_cards(packets: PacketList) -> Set[CreditCard]:
     credit_cards = set()
-    strings = utils.extract_strings_splitted_on_new_lines_from(packets)
+    strings = utils.extract_strings_splitted_on_end_of_line_from(packets)
 
     def clean_credit_card(card):
         return card.replace(" ", "").replace("-", "")

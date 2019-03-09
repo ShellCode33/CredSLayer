@@ -62,7 +62,7 @@ def extract_strings_from(packets: PacketList) -> List[str]:
                 strings.append(string)
 
         except UnicodeDecodeError:
-            # If non-unicode data were in the packet's payload, we try to split on non-printable bytes and ...
+            # We try to split on non-printable bytes and ...
             potential_strings = re.split(STRING_EXTRACT_REGEX, packet.load)
 
             for potential_string in potential_strings:
@@ -78,11 +78,11 @@ def extract_strings_from(packets: PacketList) -> List[str]:
     return strings
 
 
-def extract_strings_splitted_on_new_lines_from(packets: PacketList) -> List[str]:
+def extract_strings_splitted_on_end_of_line_from(packets: PacketList) -> List[str]:
     """Builds a list of strings that are separated by a new line character. It's very useful when working with
     text-based protocol that use new lines to delimit messages (IRC, FTP, Telnet, ...).
     """
 
     strings = extract_strings_from(packets)
     strings = "".join(strings)
-    return re.split("[\r\n]+", strings)
+    return re.split("[\r\n\x00]+", strings)

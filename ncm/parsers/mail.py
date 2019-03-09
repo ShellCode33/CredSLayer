@@ -13,7 +13,7 @@ def analyse(packets: PacketList) -> CredentialsList:
     logger.debug("Mail analysis...")
 
     all_credentials = []
-    strings = utils.extract_strings_splitted_on_new_lines_from(packets)
+    strings = utils.extract_strings_splitted_on_end_of_line_from(packets)
 
     auth_process = False
     username = password = None

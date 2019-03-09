@@ -9,7 +9,7 @@ import re
 def analyse(packets: PacketList) -> CredentialsList:
     logger.debug("FTP analysis...")
 
-    strings = utils.extract_strings_splitted_on_new_lines_from(packets)
+    strings = utils.extract_strings_splitted_on_end_of_line_from(packets)
 
     username = password = None
     all_credentials = []
