@@ -30,7 +30,8 @@ def analyse(packets: PacketList) -> CredentialsList:
 
             if result:
                 username = result.group("DN").decode()
-                password = result.group("password").decode()
+                password_size = result.group("pass_size")[0]
+                password = result.group("password")[:password_size].decode()
                 message_id = result.group("message_id")
 
     return all_credentials
