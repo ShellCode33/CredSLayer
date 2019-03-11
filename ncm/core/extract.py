@@ -50,11 +50,10 @@ def extract_emails(packets: PacketList) -> Set:
     for string in strings:
         emails_found = email_regex.findall(string)
 
-        if len(emails_found) > 0:
-            for email_found in emails_found:
-                if email_found not in emails_already_found:
-                    emails.add(email_found)
-                    emails_already_found.add(email_found)
+        for email_found in emails_found:
+            if email_found not in emails_already_found:
+                emails.add(email_found)
+                emails_already_found.add(email_found)
 
     return emails
 
