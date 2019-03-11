@@ -86,15 +86,15 @@ def analyse(packets: PacketList) -> CredentialsList:
 
                 if len(post_content) <= HTTP_AUTH_MAX_LOGIN_POST_LENGTH:
                     logger.info("POST data found: '{}'".format(post_content))
-                    get_parameters = parse_qs(post_content)
+                    post_parameters = parse_qs(post_content)
 
                     username = password = None
 
-                    for parameter in get_parameters:
+                    for parameter in post_parameters:
                         if parameter in HTTP_AUTH_POTENTIAL_USERNAMES:
-                            username = get_parameters[parameter][0]
+                            username = post_parameters[parameter][0]
                         elif parameter in HTTP_AUTH_POTENTIAL_PASSWORDS:
-                            password = get_parameters[parameter][0]
+                            password = post_parameters[parameter][0]
 
                     all_credentials.append(Credentials(username, password))
 
