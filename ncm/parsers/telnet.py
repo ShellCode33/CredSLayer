@@ -1,11 +1,13 @@
 # coding: utf-8
 
-from scapy.plist import PacketList
-from ncm.core import logger, utils
-from ncm.core.utils import CredentialsList, Credentials
-
+from pyshark.packet.packet import Packet
+from ncm.core.session import SessionList
+from ncm.core.utils import Credentials
 
 POTENTIAL_USERNAME_ASK = ["login:", "username:", "user:", "name:"]
+POTENTIAL_AUTH_SUCCESS = ["last login", "welcome"]
+
+sessions = SessionList()
 
 
 def _is_username_duplicated(username):
@@ -13,6 +15,7 @@ def _is_username_duplicated(username):
     Detects if the username has been duplicated because of telnet's echo mode.
     Duplicated username example : aaddmmiinn
     Prone to false positives, but very unlikely. Who uses usernames such as the one above ?..
+    We could look for echo mode in telnet protocol, but it could be missing from the capture.
     """
 
     if len(username) % 2 == 1:
@@ -25,38 +28,59 @@ def _is_username_duplicated(username):
     return True
 
 
-def analyse(packets: PacketList) -> CredentialsList:
-    logger.debug("Telnet analysis...")
+def analyse(packet: Packet) -> Credentials:
 
-    all_credentials = []
-    strings = utils.extract_strings_splitted_on_end_of_line_from(packets)
+    if not hasattr(packet["telnet"], "data"):
+        return None
 
-    username = password = None
+    session = sessions.get_session_of(packet)
 
-    # We don't stop the loop even if we find a username/password because
-    # if we find others it means a wrong password has been entered
-    for string in strings:
+    if session["data_being_built"] is None:
+        session["data_being_built"] = ""
+        session["user_being_built"] = session["pass_being_built"] = False
 
-        potential_username_tokens = string.split(" ")
+    # Sometimes tshark returns multiple Data fields
+    data_fields = packet["telnet"].data.all_fields
 
-        # -1 is the username, -2 the "asking" part
-        if len(potential_username_tokens) >= 2 and potential_username_tokens[-2] in POTENTIAL_USERNAME_ASK:
-            username = potential_username_tokens[-1]
+    for data in data_fields:
+        try:
+            data = data.binary_value.decode()
+        except UnicodeDecodeError:
+            continue
 
-            if _is_username_duplicated(username):
-                username = "".join([username[i] for i in range(0, len(username), 2)])
+        lowered_data = data.lower()
 
-        elif string.lower().startswith("password:"):
-            begin_pass_index = string.find(":") + 1
+        if lowered_data.strip() in POTENTIAL_USERNAME_ASK:
+            session["user_being_built"] = True
 
-            # Prone to false positives, but sometimes the telnet server sends "password:" and sometimes "password: "
-            # We're just hoping the password doesn't start with a space...
-            if string[begin_pass_index] == " ":
-                begin_pass_index += 1
+        elif lowered_data.strip() == "password:":
+            session["pass_being_built"] = True
 
-            password = string[begin_pass_index:]
+        elif session["password"]:
+            for auth_success_msg in POTENTIAL_AUTH_SUCCESS:
+                if auth_success_msg in lowered_data:
+                    sessions.remove(session)
+                    return Credentials(session["username"], session["password"])
 
-    if username is not None or password is not None:
-        all_credentials.append(Credentials(username, password))
+        else:
+            session["data_being_built"] += data
 
-    return all_credentials
+            if "\r" in session["data_being_built"] or "\n" in session["data_being_built"]:
+                data_being_built = session["data_being_built"].replace("\r", "")\
+                                                                         .replace("\n", "")\
+                                                                         .replace("\x00", "")
+
+                if session["user_being_built"]:
+                    username = data_being_built
+
+                    if _is_username_duplicated(username):
+                        username = "".join([username[i] for i in range(0, len(username), 2)])
+
+                    session["username"] = username
+                    session["user_being_built"] = False
+
+                elif session["pass_being_built"]:
+                    session["password"] = data_being_built
+                    session["pass_being_built"] = False
+
+                session["data_being_built"] = ""

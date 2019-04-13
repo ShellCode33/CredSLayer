@@ -1,37 +1,26 @@
 # coding: utf-8
 
-from scapy.plist import PacketList
-from ncm.core import logger, utils
-from ncm.core.utils import CredentialsList, Credentials
-import re
+from pyshark.packet.packet import Packet
+from ncm.core.session import SessionList
+from ncm.core.utils import Credentials
 
-LDAP_BIND_REQUEST_REGEX = re.compile(b"\x30.\x02\x01(?P<message_id>.)\x60.\x02\x01"
-                                     b"(?P<ldap_version>[\x01\x02\x03])\x04(?P<DN_size>.)(?P<DN>.*)\x80"
-                                     b"(?P<pass_size>.)(?P<password>.*)", re.DOTALL)
+sessions = SessionList()
 
 
-def analyse(packets: PacketList) -> CredentialsList:
-    logger.debug("LDAP analysis...")
+def analyse(packet: Packet) -> Credentials:
 
-    all_credentials = []
+    session = sessions.get_session_of(packet)
 
-    username = password = message_id = None
+    if hasattr(packet["ldap"], "name"):
+        session["username"] = packet["ldap"].name
 
-    for packet in packets:
-        if hasattr(packet, "load"):
+    if hasattr(packet["ldap"], "simple"):
+        session["password"] = packet["ldap"].simple
+        session["auth_process"] = True
 
-            if message_id is not None:
-                # If this regex matches, it means the server returned successful authentication
-                if re.search(b"\x30.*\x02\x01" + message_id + b"\x61.*\x0a\x01\x00", packet.load):
-                    all_credentials.append(Credentials(username, password))
-                    username = password = message_id = None
+    if session["auth_process"] and hasattr(packet["ldap"], "resultcode"):
+        result_code = int(packet["ldap"].resultcode)
+        sessions.remove(session)
 
-            result = LDAP_BIND_REQUEST_REGEX.search(packet.load)
-
-            if result:
-                username = result.group("DN").decode()
-                password_size = result.group("pass_size")[0]
-                password = result.group("password")[:password_size].decode()
-                message_id = result.group("message_id")
-
-    return all_credentials
+        if result_code == 0:
+            return Credentials(session["username"], session["password"])

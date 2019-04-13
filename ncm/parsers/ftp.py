@@ -1,34 +1,32 @@
 # coding: utf-8
 
-from scapy.plist import PacketList
-from ncm.core import logger, utils
-from ncm.core.utils import CredentialsList, Credentials
-import re
+from pyshark.packet.packet import Packet
+from ncm.core.session import SessionList
+from ncm.core.utils import Credentials
+
+sessions = SessionList()
 
 
-def analyse(packets: PacketList) -> CredentialsList:
-    logger.debug("FTP analysis...")
+def analyse(packet: Packet) -> Credentials:
 
-    strings = utils.extract_strings_splitted_on_end_of_line_from(packets)
+    session = sessions.get_session_of(packet)
 
-    username = password = None
-    all_credentials = []
+    if hasattr(packet["ftp"], "response_code"):
+        code = int(packet["ftp"].response_code)
 
-    # We don't stop the loop even if USER and PASS have been found in case a wrong password has been entered
-    # Plus the fact that sometimes the USER statement can be duplicated
-    for string in strings:
+        if code == 230 and session["username"] and session["password"]:
+            sessions.remove(session)
+            return Credentials(session["username"], session["password"])
 
-        # Connection successful (also prevents false positives with IRC)
-        if string.startswith("230") and (username is not None or password is not None):
-            all_credentials.append(Credentials(username, password))
-            username = password = None
+        elif code == 430:
+            sessions.remove(session)
+            session["username"] = session["password"] = None
 
-        elif string.startswith("USER"):
-            space_index = string.find(" ")
-            username = string[space_index+1:]
+    elif hasattr(packet["ftp"], "request_command"):
+        command = packet["ftp"].request_command
 
-        elif string.startswith("PASS"):
-            space_index = string.find(" ")
-            password = string[space_index + 1:]
+        if command == "USER":
+            session["username"] = packet["ftp"].request_arg
 
-    return all_credentials
+        elif command == "PASS":
+            session["password"] = packet["ftp"].request_arg

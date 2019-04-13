@@ -1,14 +1,15 @@
 # coding: utf-8
 
-from scapy.plist import PacketList
 from typing import Set
 import re
+
+from pyshark.packet.packet import Packet
 
 from ncm.core import utils
 from ncm.core.utils import CreditCard
 
 # This regex has been made in order to prevent false positives, theoretically it can miss a few addresses.
-email_regex = re.compile(r'(?:\t| |^|<|,|:)([^+\x00-\x20@<>/\\{}`^\'*:;=()%\[\],"]'
+email_regex = re.compile(r'(?:\t| |^|<|,|:)([^+\x00-\x20@<>/\\{}`^\'*:;=()%\[\],_\-"]'
                          r'[^\x00-\x20@<>/\\{}`^\'*:;=()%\[\],"]{1,63}@(?:[A-Za-z0-9]{2,63}\.)+[A-Za-z]{2,6})')
 
 # Tries to match things that look like a credit card.
@@ -43,9 +44,9 @@ emails_already_found = set()
 credit_cards_already_found = set()
 
 
-def extract_emails(packets: PacketList) -> Set:
+def extract_emails(packet: Packet) -> Set:
     emails = set()
-    strings = utils.extract_strings_splitted_on_end_of_line_from(packets)
+    strings = utils.extract_strings_splitted_on_end_of_line_from(packet)
 
     for string in strings:
         emails_found = email_regex.findall(string)
@@ -58,9 +59,9 @@ def extract_emails(packets: PacketList) -> Set:
     return emails
 
 
-def extract_credit_cards(packets: PacketList) -> Set[CreditCard]:
+def extract_credit_cards(packet: Packet) -> Set[CreditCard]:
     credit_cards = set()
-    strings = utils.extract_strings_splitted_on_end_of_line_from(packets)
+    strings = utils.extract_strings_splitted_on_end_of_line_from(packet)
 
     def clean_credit_card(card):
         return card.replace(" ", "").replace("-", "")
