@@ -11,8 +11,8 @@ import pyshark
 
 def _process_packet(packet: Packet):
 
-    # We drop non-tcp packets (for now)
-    if "tcp" not in packet:
+    # We only support tcp & udp packets for now
+    if "tcp" not in packet and "udp" not in packet:
         return
 
     emails_found = extract.extract_emails(packet)

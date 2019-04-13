@@ -12,15 +12,26 @@ class Session(object):
     name = None
 
     def __init__(self, packet: Packet):
-        src = "{}:{}".format(packet.ip.src, packet.tcp.srcport)
-        dst = "{}:{}".format(packet.ip.dst, packet.tcp.dstport)
+        proto_id = int(packet.ip.proto)
+
+        if proto_id == 6:
+            proto = "tcp"
+            src = "{}:{}".format(packet.ip.src, packet.tcp.srcport)
+            dst = "{}:{}".format(packet.ip.dst, packet.tcp.dstport)
+        elif proto_id == 17:
+            proto = "udp"
+            # We don't track UDP "sessions" using port because client's port changes every time...
+            src = packet.ip.src
+            dst = packet.ip.dst
+        else:
+            raise Exception("Unsupported protocol id: " + str(proto_id))
 
         if src < dst:
             session_name = src + " | " + dst
         else:
             session_name = dst + " | " + src
 
-        self.name = session_name
+        self.name = "{} {}".format(proto.upper(), session_name)
 
     def __eq__(self, other):
         if isinstance(other, Session):
