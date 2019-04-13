@@ -66,6 +66,15 @@ class ParsersTest(unittest.TestCase):
         self.assertTrue(Credentials("CN=xxxxxxxx,OU=Users,OU=Accounts,DC=xx,"
                                     "DC=xxx,DC=xxxxx,DC=net", "/dev/rdsk/c0t0d0s0") in credentials_list)
 
+    def test_snmp(self):
+        credentials_list = _extract_creds_from("samples/snmp-v1.pcap", "snmp")
+        self.assertTrue(Credentials(password="public") in credentials_list)
+
+        credentials_list = _extract_creds_from("samples/snmp-v3.pcap", "snmp")
+        self.assertTrue(Credentials(username="pippo") in credentials_list)
+        self.assertTrue(Credentials(username="pippo2") in credentials_list)
+        self.assertTrue(Credentials(username="pippo3") in credentials_list)
+        self.assertTrue(Credentials(username="pippo4") in credentials_list)
 
 class ExtractTest(unittest.TestCase):
 
@@ -149,7 +158,7 @@ class SessionsTest(unittest.TestCase):
         pcap.close()
 
         self.assertTrue(len(sessions) == 1)
-        self.assertTrue("10.10.30.26:43958 | 129.21.171.72:21" in sessions)
+        self.assertTrue("TCP 10.10.30.26:43958 | 129.21.171.72:21" in sessions)
 
         sessions.clear()
 
@@ -162,6 +171,21 @@ class SessionsTest(unittest.TestCase):
         pcap.close()
 
         self.assertTrue(len(sessions) == 3)
-        self.assertTrue("131.151.32.21:4167 | 131.151.37.122:143" in sessions)
-        self.assertTrue("131.151.32.91:3614 | 131.151.37.122:1065" in sessions)
-        self.assertTrue("131.151.32.91:1065 | 131.151.37.117:1065" in sessions)
+        self.assertTrue("TCP 131.151.32.21:4167 | 131.151.37.122:143" in sessions)
+        self.assertTrue("TCP 131.151.32.91:3614 | 131.151.37.122:1065" in sessions)
+        self.assertTrue("TCP 131.151.32.91:1065 | 131.151.37.117:1065" in sessions)
+
+        sessions.clear()
+
+        pcap = FileCapture("samples/snmp-v1.pcap")
+
+        for packet in pcap:
+            if "udp" in packet:
+                sessions.get_session_of(packet)
+
+        pcap.close()
+
+        self.assertTrue(len(sessions) == 3)
+        self.assertTrue("UDP 172.31.19.54 | 172.31.19.73" in sessions)
+        self.assertTrue("UDP 172.31.19.73 | 224.0.1.35" in sessions)
+        self.assertTrue("UDP 172.31.19.255 | 172.31.19.73" in sessions)
