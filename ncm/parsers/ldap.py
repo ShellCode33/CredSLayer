@@ -1,6 +1,8 @@
 # coding: utf-8
 
 from pyshark.packet.packet import Packet
+
+from ncm.core import logger
 from ncm.core.session import SessionList
 from ncm.core.utils import Credentials
 
@@ -23,4 +25,5 @@ def analyse(packet: Packet) -> Credentials:
         sessions.remove(session)
 
         if result_code == 0:
+            logger.found("LDAP", "credentials found: {} -- {}".format(session["username"], session["password"]))
             return Credentials(session["username"], session["password"])

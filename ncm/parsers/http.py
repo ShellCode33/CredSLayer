@@ -66,6 +66,7 @@ def analyse(packet: Packet) -> Credentials:
                 elif parameter in HTTP_AUTH_POTENTIAL_PASSWORDS:
                     password = get_parameters[parameter][0]
 
+            logger.found("HTTP", "credentials found: {} -- {}".format(username, password))
             return Credentials(username, password)
 
         elif hasattr(packet["http"], "file_data"):  # POST requests
@@ -83,9 +84,11 @@ def analyse(packet: Packet) -> Credentials:
                     elif parameter in HTTP_AUTH_POTENTIAL_PASSWORDS:
                         password = post_parameters[parameter][0]
 
+                logger.found("HTTP", "credentials found: {} -- {}".format(username, password))
                 return Credentials(username, password)
 
     elif hasattr(packet["http"], "response_for_uri"):
         if session["authorization_header_uri"] == packet["http"].response_for_uri and packet["http"].response_code != "401":
             sessions.remove(session)
+            logger.found("HTTP", "credentials found: {} -- {}".format(session["username"], session["password"]))
             return Credentials(session["username"], session["password"])

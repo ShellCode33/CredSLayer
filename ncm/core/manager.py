@@ -29,10 +29,7 @@ def _process_packet(packet: Packet):
             layer_name = layer.layer_name
 
             if layer_name in parsers:
-                creds = parsers[layer_name].analyse(packet)
-
-                if creds:
-                    logger.found(layer_name.upper(), creds)
+                parsers[layer_name].analyse(packet)
 
 
 def process_pcap(filename: str):

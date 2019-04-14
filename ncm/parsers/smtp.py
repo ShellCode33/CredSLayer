@@ -2,7 +2,7 @@
 
 from base64 import b64decode
 from pyshark.packet.packet import Packet
-from ncm.core import utils
+from ncm.core import utils, logger
 from ncm.core.session import SessionList
 from ncm.core.utils import Credentials
 
@@ -45,6 +45,7 @@ def analyse(packet: Packet) -> Credentials:
 
         if response_code == 235:
             sessions.remove(session)
+            logger.found("SMTP", "credentials found: {} -- {}".format(session["username"], session["password"]))
             return Credentials(session["username"], session["password"])
 
         # According to the RFC, the server could return something else, but most of the times it will be 535

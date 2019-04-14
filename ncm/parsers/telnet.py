@@ -1,6 +1,8 @@
 # coding: utf-8
 
 from pyshark.packet.packet import Packet
+
+from ncm.core import logger
 from ncm.core.session import SessionList
 from ncm.core.utils import Credentials
 
@@ -60,6 +62,7 @@ def analyse(packet: Packet) -> Credentials:
             for auth_success_msg in POTENTIAL_AUTH_SUCCESS:
                 if auth_success_msg in lowered_data:
                     sessions.remove(session)
+                    logger.found("TELNET", "credentials found: {} -- {}".format(session["username"], session["password"]))
                     return Credentials(session["username"], session["password"])
 
         else:

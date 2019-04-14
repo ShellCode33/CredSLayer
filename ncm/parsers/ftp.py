@@ -1,6 +1,8 @@
 # coding: utf-8
 
 from pyshark.packet.packet import Packet
+
+from ncm.core import logger
 from ncm.core.session import SessionList
 from ncm.core.utils import Credentials
 
@@ -16,6 +18,7 @@ def analyse(packet: Packet) -> Credentials:
 
         if code == 230 and session["username"] and session["password"]:
             sessions.remove(session)
+            logger.found("FTP", "credentials found: {} -- {}".format(session["username"], session["password"]))
             return Credentials(session["username"], session["password"])
 
         elif code == 430:
