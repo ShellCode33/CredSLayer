@@ -7,7 +7,7 @@ from ncm.core import logger
 from ncm.core.session import SessionList
 from ncm.core.utils import Credentials
 
-HTTP_IGNORED_EXTENSIONS = ["css", "ico", "png", "jpg", "jpeg", "gif"]
+HTTP_IGNORED_EXTENSIONS = ["css", "ico", "png", "jpg", "jpeg", "gif", "js"]
 HTTP_METHODS = ["OPTIONS", "GET", "HEAD", "POST", "PUT", "DELETE", "TRACE", "CONNECT"]
 
 HTTP_AUTH_MAX_LOGIN_POST_LENGTH = 500  # We ignore every posted content exceeding that length to prevent false positives
@@ -66,8 +66,9 @@ def analyse(packet: Packet) -> Credentials:
                 elif parameter in HTTP_AUTH_POTENTIAL_PASSWORDS:
                     password = get_parameters[parameter][0]
 
-            logger.found("HTTP", "credentials found: {} -- {}".format(username, password))
-            return Credentials(username, password)
+            if username:
+                logger.found("HTTP", "credentials found: {} -- {}".format(username, password))
+                return Credentials(username, password)
 
         elif hasattr(packet["http"], "file_data"):  # POST requests
             post_content = packet["http"].file_data
@@ -90,5 +91,5 @@ def analyse(packet: Packet) -> Credentials:
     elif hasattr(packet["http"], "response_for_uri"):
         if session["authorization_header_uri"] == packet["http"].response_for_uri and packet["http"].response_code != "401":
             sessions.remove(session)
-            logger.found("HTTP", "credentials found: {} -- {}".format(session["username"], session["password"]))
+            logger.found("HTTP", "basic auth credentials found: {} -- {}".format(session["username"], session["password"]))
             return Credentials(session["username"], session["password"])
