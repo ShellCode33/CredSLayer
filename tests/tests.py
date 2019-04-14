@@ -76,6 +76,13 @@ class ParsersTest(unittest.TestCase):
         self.assertTrue(Credentials(username="pippo3") in credentials_list)
         self.assertTrue(Credentials(username="pippo4") in credentials_list)
 
+    def test_mysql(self):
+        self.assertTrue(Credentials("tfoerste", hash="eefd6d5562851bc5966a0b41236ae3f2315efcc4", salt=[">~$4uth,", ">612IWZ>fhWX"])
+                        in _extract_creds_from("samples/mysql.pcap", "mysql"))
+        self.assertTrue(Credentials("user10", hash="55ee72f0c6694cbb3a104eb97f8ee32a6a91f8b1", salt=["]E!r<uX8", "Of2c!tIM)\"n'"])
+                        in _extract_creds_from("samples/mysql2.pcap", "mysql"))
+
+
 class ExtractTest(unittest.TestCase):
 
     def setUp(self):

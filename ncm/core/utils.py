@@ -6,7 +6,7 @@ from typing import List
 from string import printable as printable_charset
 from pyshark.packet.packet import Packet
 
-Credentials = namedtuple('Credentials', ['username', 'password', 'hash'])
+Credentials = namedtuple('Credentials', ['username', 'password', 'hash', 'salt'])
 Credentials.__new__.__defaults__ = (None,) * len(Credentials._fields)  # Create username and password default values
 
 CreditCard = namedtuple("CreditCard", ['name', 'number'])
