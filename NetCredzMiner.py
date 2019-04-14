@@ -18,14 +18,24 @@ if __name__ == "__main__":
     parser.add_argument('-l', '--listen',
                         help='start active processing on specified interface',
                         metavar='INTERFACE')
-    parser.add_argument('-d', '--disable-url-logging',
+    parser.add_argument('-d', '--disable-url-logging', action='store_true',
                         help='disable URL logging, can be spammy')
+    parser.add_argument('-s', '--string-inspection',
+                        choices=["enable", "disable"],
+                        help='let you specify if you want to look for interesting strings (email addresses, '
+                             'credit cards, ...) in network captures. Pretty heavy on the CPU. '
+                             'Enabled by default on pcap files, disabled on live captures.')
 
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
 
     if not args.listen and not args.pcapfiles:
         parser.error("Nothing to do...")
+
+    if args.string_inspection == "enable":
+        manager.string_inspection = True
+    elif args.string_inspection == "disable":
+        manager.string_inspection = False
 
     if args.listen:
 

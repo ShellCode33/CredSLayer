@@ -9,21 +9,25 @@ from ncm.core import logger, extract, utils
 from ncm.parsers import parsers
 
 
+string_inspection = None
+
+
 def _process_packet(packet: Packet):
 
     # We only support tcp & udp packets for now
     if "tcp" not in packet and "udp" not in packet:
         return
 
-    strings = utils.extract_strings_splitted_on_end_of_line_from(packet)
-    emails_found = extract.extract_emails(strings)
-    credit_cards_found = extract.extract_credit_cards(strings)
+    if string_inspection:
+        strings = utils.extract_strings_splitted_on_end_of_line_from(packet)
+        emails_found = extract.extract_emails(strings)
+        credit_cards_found = extract.extract_credit_cards(strings)
 
-    for email in emails_found:
-        logger.info("Found email address: " + email)
+        for email in emails_found:
+            logger.info("Found email address: " + email)
 
-    for credit_card in credit_cards_found:
-        logger.info("Credit card '{}' found: '{}'".format(credit_card.name, credit_card.number))
+        for credit_card in credit_cards_found:
+            logger.info("Credit card '{}' found: '{}'".format(credit_card.name, credit_card.number))
 
     if len(packet.layers) > 3:  # == tshark parsed something else than ETH, IP, TCP
         for layer in packet.layers[3:]:
@@ -34,6 +38,11 @@ def _process_packet(packet: Packet):
 
 
 def process_pcap(filename: str):
+
+    global string_inspection
+
+    if string_inspection is None:
+        string_inspection = True
 
     pcap = pyshark.FileCapture(filename)
     logger.debug("Processing packets in '{}'".format(filename))
@@ -49,6 +58,12 @@ def process_pcap(filename: str):
 
 
 def active_processing(interface: str):
+
+    global string_inspection
+
+    if string_inspection is None:
+        string_inspection = False
+
     logger.info("Listening on {}...".format(interface))
     live = pyshark.LiveCapture(interface=interface)
     live.apply_on_packets(_process_packet)
