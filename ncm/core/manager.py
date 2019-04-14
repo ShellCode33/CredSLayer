@@ -5,7 +5,7 @@ import time
 import pyshark
 from pyshark.packet.packet import Packet
 
-from ncm.core import logger, extract
+from ncm.core import logger, extract, utils
 from ncm.parsers import parsers
 
 
@@ -15,8 +15,9 @@ def _process_packet(packet: Packet):
     if "tcp" not in packet and "udp" not in packet:
         return
 
-    emails_found = extract.extract_emails(packet)
-    credit_cards_found = extract.extract_credit_cards(packet)
+    strings = utils.extract_strings_splitted_on_end_of_line_from(packet)
+    emails_found = extract.extract_emails(strings)
+    credit_cards_found = extract.extract_credit_cards(strings)
 
     for email in emails_found:
         logger.info("Found email address: " + email)

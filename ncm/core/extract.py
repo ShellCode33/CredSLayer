@@ -1,11 +1,8 @@
 # coding: utf-8
 
-from typing import Set
 import re
+from typing import Set, List
 
-from pyshark.packet.packet import Packet
-
-from ncm.core import utils
 from ncm.core.utils import CreditCard
 
 # This regex has been made in order to prevent false positives, theoretically it can miss a few addresses.
@@ -44,11 +41,10 @@ emails_already_found = set()
 credit_cards_already_found = set()
 
 
-def extract_emails(packet: Packet) -> Set:
+def extract_emails(packet_strings: List[str]) -> Set:
     emails = set()
-    strings = utils.extract_strings_splitted_on_end_of_line_from(packet)
 
-    for string in strings:
+    for string in packet_strings:
         emails_found = email_regex.findall(string)
 
         for email_found in emails_found:
@@ -59,14 +55,13 @@ def extract_emails(packet: Packet) -> Set:
     return emails
 
 
-def extract_credit_cards(packet: Packet) -> Set[CreditCard]:
+def extract_credit_cards(packet_strings: List[str]) -> Set[CreditCard]:
     credit_cards = set()
-    strings = utils.extract_strings_splitted_on_end_of_line_from(packet)
 
     def clean_credit_card(card):
         return card.replace(" ", "").replace("-", "")
 
-    for string in strings:
+    for string in packet_strings:
         credit_cards_found = first_step_credit_card_regex.findall(string)
 
         for credit_card_found in credit_cards_found:
