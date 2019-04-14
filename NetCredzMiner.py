@@ -1,11 +1,12 @@
 #!/usr/bin/python3
 # coding: utf-8
-
-from ncm.core import manager, logger
-import argcomplete
 import argparse
+import os
 import traceback
 
+import argcomplete
+
+from ncm.core import manager, logger
 
 if __name__ == "__main__":
 
@@ -27,6 +28,11 @@ if __name__ == "__main__":
         parser.error("Nothing to do...")
 
     if args.listen:
+
+        if os.geteuid() != 0:
+            print("You must be root to listen on an interface.")
+            exit(1)
+
         manager.active_processing(args.listen)
 
     for pcap in args.pcapfiles:
