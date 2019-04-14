@@ -2,11 +2,11 @@
 
 import time
 
+import pyshark
 from pyshark.packet.packet import Packet
 
-from ncm.core import logger, utils, extract
+from ncm.core import logger, extract
 from ncm.parsers import parsers
-import pyshark
 
 
 def _process_packet(packet: Packet):
@@ -49,3 +49,5 @@ def process_pcap(filename: str):
 
 def active_processing(interface: str):
     logger.info("Listening on {}...".format(interface))
+    live = pyshark.LiveCapture(interface=interface)
+    live.apply_on_packets(_process_packet)
