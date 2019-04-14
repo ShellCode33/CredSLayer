@@ -30,7 +30,11 @@ def analyse(packet: Packet) -> Credentials:
 
     session = sessions.get_session_of(packet)
 
-    if hasattr(packet["http"], "request_uri"):  # Process requests only, we don't care about responses
+    if hasattr(packet["http"], "request_uri"):
+
+        if packet["http"].request_full_uri.startswith("http://ocsp."):  # Ignore Certificate Status Protocol
+            return None
+
         extension = packet["http"].request_uri.split(".")[-1]
 
         if extension not in HTTP_IGNORED_EXTENSIONS:
@@ -85,8 +89,9 @@ def analyse(packet: Packet) -> Credentials:
                     elif parameter in HTTP_AUTH_POTENTIAL_PASSWORDS:
                         password = post_parameters[parameter][0]
 
-                logger.found("HTTP", "credentials found: {} -- {}".format(username, password))
-                return Credentials(username, password)
+                if username:
+                    logger.found("HTTP", "credentials found: {} -- {}".format(username, password))
+                    return Credentials(username, password)
 
     elif hasattr(packet["http"], "response_for_uri"):
         if session["authorization_header_uri"] == packet["http"].response_for_uri and packet["http"].response_code != "401":
