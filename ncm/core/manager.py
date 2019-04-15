@@ -49,8 +49,7 @@ def _process_packet(packet: Packet):
                     sessions.remove(session)
 
             elif layer_name in parsers:
-                if parsers[layer_name].analyse(session, layer):
-                    sessions.remove(session)
+                parsers[layer_name].analyse(session, layer)
 
 
 def process_pcap(filename: str):
