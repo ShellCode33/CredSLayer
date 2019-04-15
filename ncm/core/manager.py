@@ -45,8 +45,7 @@ def _process_packet(packet: Packet):
             layer_name = layer.layer_name
 
             if hasattr(layer, "ntlmssp_identifier") and layer.ntlmssp_identifier == "NTLMSSP":
-                if ntlmssp.analyse(session, layer):
-                    sessions.remove(session)
+                ntlmssp.analyse(session, layer)
 
             elif layer_name in parsers:
                 parsers[layer_name].analyse(session, layer)
