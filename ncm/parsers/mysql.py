@@ -1,40 +1,36 @@
 # coding: utf-8
 
-from pyshark.packet.packet import Packet
+from pyshark.packet.layer import Layer
+
 from ncm.core import logger
-from ncm.core.session import SessionList
+from ncm.core.session import Session
 from ncm.core.utils import Credentials
 
-sessions = SessionList()
 
+def analyse(session: Session, layer: Layer) -> Credentials:
 
-def analyse(packet: Packet) -> Credentials:
+    if hasattr(layer, "server_greeting"):
 
-    session = sessions.get_session_of(packet)
+        if hasattr(layer, "version"):
+            logger.info("MySQL version: " + layer.version)
 
-    if hasattr(packet["mysql"], "server_greeting"):
+        if hasattr(layer, "salt"):
+            session["salt"] = [layer.salt]
 
-        if hasattr(packet["mysql"], "version"):
-            logger.info("MySQL version: " + packet["mysql"].version)
+        if hasattr(layer, "salt2"):
+            session["salt"].append(layer.salt2)
 
-        if hasattr(packet["mysql"], "salt"):
-            session["salt"] = [packet["mysql"].salt]
+    if hasattr(layer, "client_auth_plugin"):
+        logger.info("MySQL auth plugin: " + layer.client_auth_plugin)
 
-        if hasattr(packet["mysql"], "salt2"):
-            session["salt"].append(packet["mysql"].salt2)
+    if hasattr(layer, "user"):
+        session["username"] = layer.user
+        session["hash"] = "".join(layer.passwd.split(":"))
 
-    if hasattr(packet["mysql"], "client_auth_plugin"):
-        logger.info("MySQL auth plugin: " + packet["mysql"].client_auth_plugin)
-
-    if hasattr(packet["mysql"], "user"):
-        session["username"] = packet["mysql"].user
-        session["hash"] = "".join(packet["mysql"].passwd.split(":"))
-
-    if hasattr(packet["mysql"], "response_code"):
-        response_code = int(packet["mysql"].response_code, 16)
+    if hasattr(layer, "response_code"):
+        response_code = int(layer.response_code, 16)
 
         if session["username"] and response_code == 0:
-            sessions.remove(session)
 
             for i in range(len(session["salt"])):
                 logger.found("MySQL", "salt{} found: {}".format(i+1, session["salt"][i]))

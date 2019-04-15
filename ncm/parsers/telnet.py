@@ -1,15 +1,12 @@
 # coding: utf-8
-
-from pyshark.packet.packet import Packet
+from pyshark.packet.layer import Layer
 
 from ncm.core import logger
-from ncm.core.session import SessionList
+from ncm.core.session import Session
 from ncm.core.utils import Credentials
 
 POTENTIAL_USERNAME_ASK = ["login:", "username:", "user:", "name:"]
 POTENTIAL_AUTH_SUCCESS = ["last login", "welcome"]
-
-sessions = SessionList()
 
 
 def _is_username_duplicated(username):
@@ -30,19 +27,17 @@ def _is_username_duplicated(username):
     return True
 
 
-def analyse(packet: Packet) -> Credentials:
+def analyse(session: Session, layer: Layer) -> Credentials:
 
-    if not hasattr(packet["telnet"], "data"):
+    if not hasattr(layer, "data"):
         return None
-
-    session = sessions.get_session_of(packet)
 
     if session["data_being_built"] is None:
         session["data_being_built"] = ""
         session["user_being_built"] = session["pass_being_built"] = False
 
     # Sometimes tshark returns multiple Data fields
-    data_fields = packet["telnet"].data.all_fields
+    data_fields = layer.data.all_fields
 
     for data in data_fields:
         try:
@@ -61,7 +56,6 @@ def analyse(packet: Packet) -> Credentials:
         elif session["password"]:
             for auth_success_msg in POTENTIAL_AUTH_SUCCESS:
                 if auth_success_msg in lowered_data:
-                    sessions.remove(session)
                     logger.found("TELNET", "credentials found: {} -- {}".format(session["username"], session["password"]))
                     return Credentials(session["username"], session["password"])
 

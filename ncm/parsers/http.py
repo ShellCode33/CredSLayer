@@ -2,9 +2,11 @@
 
 import base64
 from urllib.parse import parse_qs
-from pyshark.packet.packet import Packet
+
+from pyshark.packet.layer import Layer
+
 from ncm.core import logger
-from ncm.core.session import SessionList
+from ncm.core.session import Session
 from ncm.core.utils import Credentials
 
 HTTP_IGNORED_EXTENSIONS = ["css", "ico", "png", "jpg", "jpeg", "gif", "js"]
@@ -23,27 +25,23 @@ HTTP_AUTH_POTENTIAL_PASSWORDS = ['ahd_password', 'pass', 'password', '_password'
                                  'pwd', 'upassword', 'login_password', 'passwort', 'passwrd', 'wppassword', 'upasswd',
                                  'j_password']
 
-sessions = SessionList()
 
+def analyse(session: Session, layer: Layer) -> Credentials:
 
-def analyse(packet: Packet) -> Credentials:
+    if hasattr(layer, "request_uri"):
 
-    session = sessions.get_session_of(packet)
-
-    if hasattr(packet["http"], "request_uri"):
-
-        if packet["http"].request_full_uri.startswith("http://ocsp."):  # Ignore Certificate Status Protocol
+        if layer.request_full_uri.startswith("http://ocsp."):  # Ignore Certificate Status Protocol
             return None
 
-        extension = packet["http"].request_uri.split(".")[-1]
+        extension = layer.request_uri.split(".")[-1]
 
         if extension not in HTTP_IGNORED_EXTENSIONS:
-            logger.info("URL found: '{}'".format(packet["http"].request_full_uri))
+            logger.info("URL found: '{}'".format(layer.request_full_uri))
         else:
             return None
 
-        if hasattr(packet["http"], "authorization"):
-            tokens = packet["http"].authorization.split(" ")
+        if hasattr(layer, "authorization"):
+            tokens = layer.authorization.split(" ")
 
             if len(tokens) == 2 and tokens[0] == "Basic":
                 try:
@@ -51,16 +49,16 @@ def analyse(packet: Packet) -> Credentials:
                     colon_index = credentials.find(":")
                     session["username"] = credentials[:colon_index]
                     session["password"] = credentials[colon_index+1:]
-                    session["authorization_header_uri"] = packet["http"].request_full_uri
+                    session["authorization_header_uri"] = layer.request_full_uri
                 except UnicodeDecodeError:
                     logger.error("HTTP Basic auth failed: " + tokens)
                     return None
 
             else:
-                logger.info("Authorization header found: '{}'".format(packet["http"].authorization))
+                logger.info("Authorization header found: '{}'".format(layer.authorization))
 
-        if hasattr(packet["http"], "request_uri_query"):
-            get_parameters = parse_qs(packet["http"].request_uri_query)
+        if hasattr(layer, "request_uri_query"):
+            get_parameters = parse_qs(layer.request_uri_query)
 
             username = password = None
 
@@ -74,8 +72,8 @@ def analyse(packet: Packet) -> Credentials:
                 logger.found("HTTP", "credentials found: {} -- {}".format(username, password))
                 return Credentials(username, password)
 
-        elif hasattr(packet["http"], "file_data"):  # POST requests
-            post_content = packet["http"].file_data
+        elif hasattr(layer, "file_data"):  # POST requests
+            post_content = layer.file_data
 
             if len(post_content) <= HTTP_AUTH_MAX_LOGIN_POST_LENGTH:
                 logger.info("POST data found: '{}'".format(post_content))
@@ -93,8 +91,7 @@ def analyse(packet: Packet) -> Credentials:
                     logger.found("HTTP", "credentials found: {} -- {}".format(username, password))
                     return Credentials(username, password)
 
-    elif hasattr(packet["http"], "response_for_uri"):
-        if session["authorization_header_uri"] == packet["http"].response_for_uri and packet["http"].response_code != "401":
-            sessions.remove(session)
+    elif hasattr(layer, "response_for_uri"):
+        if session["authorization_header_uri"] == layer.response_for_uri and layer.response_code != "401":
             logger.found("HTTP", "basic auth credentials found: {} -- {}".format(session["username"], session["password"]))
             return Credentials(session["username"], session["password"])

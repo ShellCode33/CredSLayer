@@ -1,23 +1,21 @@
 # coding: utf-8
 
 from base64 import b64decode
-from pyshark.packet.packet import Packet
+
+from pyshark.packet.layer import Layer
+
 from ncm.core import utils, logger
-from ncm.core.session import SessionList
+from ncm.core.session import Session
 from ncm.core.utils import Credentials
 
-sessions = SessionList()
 
+def analyse(session: Session, layer: Layer) -> Credentials:
 
-def analyse(packet: Packet) -> Credentials:
+    if hasattr(layer, "req_command"):
+        command = layer.req_command
 
-    session = sessions.get_session_of(packet)
-
-    if hasattr(packet["smtp"], "req_command"):
-        command = packet["smtp"].req_command
-
-        if hasattr(packet["smtp"], "req_parameter"):
-            parameter = packet["smtp"].req_parameter
+        if hasattr(layer, "req_parameter"):
+            parameter = layer.req_parameter
 
             if command == "AUTH":
                 # TODO : handle more types of auth
@@ -27,27 +25,24 @@ def analyse(packet: Packet) -> Credentials:
                     session["auth_process_plain"] = True
 
     if session["auth_process_login"]:
-        if hasattr(packet["smtp"], "auth_username"):
-            username = packet["smtp"].auth_username
+        if hasattr(layer, "auth_username"):
+            username = layer.auth_username
             session["username"] = b64decode(username).decode()
 
-        elif hasattr(packet["smtp"], "auth_password"):
-            password = packet["smtp"].auth_password
+        elif hasattr(layer, "auth_password"):
+            password = layer.auth_password
             session["password"] = b64decode(password).decode()
+            session["auth_process_login"] = False
 
     elif session["auth_process_plain"]:
-        if hasattr(packet["smtp"], "auth_username"):
-            b64_auth = packet["smtp"].auth_username
+        if hasattr(layer, "auth_username"):
+            b64_auth = layer.auth_username
             session["username"], session["password"] = utils.parse_sasl_creds(b64_auth, "PLAIN")
+            session["auth_process_plain"] = False
 
-    if hasattr(packet["smtp"], "response_code"):
-        response_code = int(packet["smtp"].response_code)
+    if hasattr(layer, "response_code"):
+        response_code = int(layer.response_code)
 
         if response_code == 235:
-            sessions.remove(session)
             logger.found("SMTP", "credentials found: {} -- {}".format(session["username"], session["password"]))
             return Credentials(session["username"], session["password"])
-
-        # According to the RFC, the server could return something else, but most of the times it will be 535
-        elif response_code == 535:
-            sessions.remove(session)

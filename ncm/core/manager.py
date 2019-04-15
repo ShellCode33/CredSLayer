@@ -1,15 +1,23 @@
 # coding: utf-8
 
+import signal
 import time
 
 import pyshark
 from pyshark.packet.packet import Packet
 
 from ncm.core import logger, extract, utils
-from ncm.parsers import parsers
-
+from ncm.core.session import SessionList
+from ncm.parsers import parsers, ntlmssp
 
 string_inspection = None
+sessions = SessionList()
+
+
+def signal_handler(sig, frame):
+        sessions.__del__()
+        print('Bye !')
+        exit(0)
 
 
 def _process_packet(packet: Packet):
@@ -30,11 +38,19 @@ def _process_packet(packet: Packet):
             logger.info("Credit card '{}' found: '{}'".format(credit_card.name, credit_card.number))
 
     if len(packet.layers) > 3:  # == tshark parsed something else than ETH, IP, TCP
+
+        session = sessions.get_session_of(packet)
+
         for layer in packet.layers[3:]:
             layer_name = layer.layer_name
 
-            if layer_name in parsers:
-                parsers[layer_name].analyse(packet)
+            if hasattr(layer, "ntlmssp_identifier") and layer.ntlmssp_identifier == "NTLMSSP":
+                if ntlmssp.analyse(session, layer):
+                    sessions.remove(session)
+
+            elif layer_name in parsers:
+                if parsers[layer_name].analyse(session, layer):
+                    sessions.remove(session)
 
 
 def process_pcap(filename: str):
@@ -63,6 +79,9 @@ def active_processing(interface: str):
 
     if string_inspection is None:
         string_inspection = False
+
+    signal.signal(signal.SIGINT, signal_handler)
+    sessions.manage_outdated_sessions()
 
     logger.info("Listening on {}...".format(interface))
     live = pyshark.LiveCapture(interface=interface)

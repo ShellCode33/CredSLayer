@@ -4,21 +4,34 @@ import os
 from typing import List
 
 from pyshark import FileCapture
-from ncm.core import extract
+from ncm.core import extract, utils
+from ncm.core.session import SessionList
 from ncm.core.utils import Credentials, CreditCard
 from ncm.parsers import parsers
 
 
-def _extract_creds_from(pcap_filename, parser_to_use) -> List[Credentials]:
+def _extract_creds_from(pcap_filename, layer_name) -> List[Credentials]:
     pcap = FileCapture(pcap_filename)
-    parser = parsers[parser_to_use]
+    parser = parsers[layer_name]
     credentials_list = []
+    sessions = SessionList()
 
     for packet in pcap:
-        if parser_to_use in packet:  # If the layer is in the packet
-            credentials_list.append(parser.analyse(packet))
+
+        if "tcp" not in packet and "udp" not in packet:
+            continue
+
+        session = sessions.get_session_of(packet)
+
+        if layer_name in packet:  # If the layer is in the packet
+            creds = parser.analyse(session, packet[layer_name])
+
+            if creds:
+                sessions.remove(session)
+                credentials_list.append(creds)
 
     pcap.close()
+    del sessions
     return credentials_list
 
 
@@ -96,11 +109,12 @@ class ExtractTest(unittest.TestCase):
         emails_found = set()
 
         for packet in pcap:
-            emails_found |= extract.extract_emails(packet)
+            strings = utils.extract_strings_splitted_on_end_of_line_from(packet)
+            emails_found |= extract.extract_emails(strings)
 
         pcap.close()
 
-        self.assertTrue(len(emails_found) >= 47)
+        self.assertTrue(len(emails_found) >= 46)
         self.assertTrue("nutmeg12s@hotmail.com" in emails_found)
         self.assertTrue("SharpJDs@yahoo.com" in emails_found)
         self.assertTrue("hardcase_890@yahoo.com" in emails_found)
@@ -112,7 +126,8 @@ class ExtractTest(unittest.TestCase):
         emails_found.clear()
 
         for packet in pcap:
-            emails_found |= extract.extract_emails(packet)
+            strings = utils.extract_strings_splitted_on_end_of_line_from(packet)
+            emails_found |= extract.extract_emails(strings)
 
         pcap.close()
 
@@ -125,7 +140,8 @@ class ExtractTest(unittest.TestCase):
         credit_cards_found = set()
 
         for packet in pcap:
-            credit_cards_found |= extract.extract_credit_cards(packet)
+            strings = utils.extract_strings_splitted_on_end_of_line_from(packet)
+            credit_cards_found |= extract.extract_credit_cards(strings)
 
         pcap.close()
 
@@ -138,7 +154,8 @@ class ExtractTest(unittest.TestCase):
         credit_cards_found = set()
 
         for packet in pcap:
-            credit_cards_found |= extract.extract_credit_cards(packet)
+            strings = utils.extract_strings_splitted_on_end_of_line_from(packet)
+            credit_cards_found |= extract.extract_credit_cards(strings)
 
         pcap.close()
         self.assertTrue(len(credit_cards_found) == 0)
@@ -196,3 +213,5 @@ class SessionsTest(unittest.TestCase):
         self.assertTrue("UDP 172.31.19.54 | 172.31.19.73" in sessions)
         self.assertTrue("UDP 172.31.19.73 | 224.0.1.35" in sessions)
         self.assertTrue("UDP 172.31.19.255 | 172.31.19.73" in sessions)
+
+        # TODO: add more session tests

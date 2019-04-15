@@ -1,28 +1,23 @@
 # coding: utf-8
-
-from pyshark.packet.packet import Packet
+from pyshark.packet.layer import Layer
 
 from ncm.core import logger
-from ncm.core.session import SessionList
+from ncm.core.session import Session
 from ncm.core.utils import Credentials
 
-sessions = SessionList()
 
+def analyse(session: Session, layer: Layer) -> Credentials:
 
-def analyse(packet: Packet) -> Credentials:
+    if hasattr(layer, "name"):
+        session["username"] = layer.name
 
-    session = sessions.get_session_of(packet)
-
-    if hasattr(packet["ldap"], "name"):
-        session["username"] = packet["ldap"].name
-
-    if hasattr(packet["ldap"], "simple"):
-        session["password"] = packet["ldap"].simple
+    if hasattr(layer, "simple"):
+        session["password"] = layer.simple
         session["auth_process"] = True
 
-    if session["auth_process"] and hasattr(packet["ldap"], "resultcode"):
-        result_code = int(packet["ldap"].resultcode)
-        sessions.remove(session)
+    if session["auth_process"] and hasattr(layer, "resultcode"):
+        result_code = int(layer.resultcode)
+        session["auth_process"] = False
 
         if result_code == 0:
             logger.found("LDAP", "credentials found: {} -- {}".format(session["username"], session["password"]))

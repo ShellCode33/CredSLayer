@@ -1,34 +1,30 @@
 # coding: utf-8
 
-from pyshark.packet.packet import Packet
+from pyshark.packet.layer import Layer
 
 from ncm.core import logger
-from ncm.core.session import SessionList
+from ncm.core.session import Session
 from ncm.core.utils import Credentials
 
-sessions = SessionList()
 
+def analyse(session: Session, layer: Layer) -> Credentials:
 
-def analyse(packet: Packet) -> Credentials:
-    session = sessions.get_session_of(packet)
-
-    if hasattr(packet["imap"], "request_command"):
-        command = packet["imap"].request_command
+    if hasattr(layer, "request_command"):
+        command = layer.request_command
 
         if command == "LOGIN":
-            tokens = packet["imap"].request.split('"')
+            tokens = layer.request.split('"')
             session["username"] = tokens[1]
             session["password"] = tokens[3]
 
-    elif hasattr(packet["imap"], "response_command"):
-        command = packet["imap"].response_command
+    elif hasattr(layer, "response_command"):
+        command = layer.response_command
 
         if command == "LOGIN":
-            status = packet["imap"].response_status
+            status = layer.response_status
 
             if status == "OK":
-                sessions.remove(session)
                 logger.found("IMAP", "credentials found: {} -- {}".format(session["username"], session["password"]))
                 return Credentials(session["username"], session["password"])
             elif status == "NO" or status == "BAD":
-                sessions.remove(session)
+                session["username"] = session["password"] = None
