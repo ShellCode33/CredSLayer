@@ -69,8 +69,9 @@ class SessionList(list):
         self._lock = Lock()
 
     def __del__(self):
-        self._keep_manager_alive = False
-        self._thread.join()
+        if self._thread.is_alive():
+            self._keep_manager_alive = False
+            self._thread.join()
 
     def get_session_of(self, packet: Packet) -> Session:
         session = Session(packet)
