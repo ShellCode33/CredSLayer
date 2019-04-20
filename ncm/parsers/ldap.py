@@ -3,16 +3,17 @@ from pyshark.packet.layer import Layer
 
 from ncm.core import logger
 from ncm.core.session import Session
-from ncm.core.utils import Credentials
 
 
-def analyse(session: Session, layer: Layer) -> Credentials:
+def analyse(session: Session, layer: Layer) -> bool:
+
+    current_creds = session.credentials_being_built
 
     if hasattr(layer, "name"):
-        session["username"] = layer.name
+        current_creds.username = layer.name
 
     if hasattr(layer, "simple"):
-        session["password"] = layer.simple
+        current_creds.password = layer.simple
         session["auth_process"] = True
 
     if session["auth_process"] and hasattr(layer, "resultcode"):
@@ -20,5 +21,7 @@ def analyse(session: Session, layer: Layer) -> Credentials:
         session["auth_process"] = False
 
         if result_code == 0:
-            logger.found("LDAP", "credentials found: {} -- {}".format(session["username"], session["password"]))
-            return Credentials(session["username"], session["password"])
+            logger.found(session, "credentials found: {} -- {}".format(current_creds.username, current_creds.password))
+            return True
+
+    return False

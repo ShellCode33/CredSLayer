@@ -1,5 +1,4 @@
 # coding: utf-8
-
 import signal
 import time
 
@@ -11,13 +10,15 @@ from ncm.core.session import SessionList
 from ncm.parsers import parsers, ntlmssp
 
 string_inspection = None
-sessions = SessionList()
+_sessions = None
 
 
 def signal_handler(sig, frame):
-        sessions.__del__()
-        print('Bye !')
-        exit(0)
+    if _sessions:
+        _sessions.__del__()
+
+    print('Bye !')
+    exit(0)
 
 
 def _process_packet(packet: Packet):
@@ -26,34 +27,45 @@ def _process_packet(packet: Packet):
     if "tcp" not in packet and "udp" not in packet:
         return
 
+    session = _sessions.get_session_of(packet)
+
+    if len(packet.layers) > 3:  # == tshark parsed something else than ETH, IP, TCP
+
+        for layer in packet.layers[3:]:
+            layer_name = layer.layer_name
+
+            are_credentials_valid = False
+
+            # Not based on layer name, can be found in different layers
+            if hasattr(layer, "ntlmssp_identifier") and layer.ntlmssp_identifier == "NTLMSSP":
+                session.protocol = layer_name.upper()
+                are_credentials_valid = ntlmssp.analyse(session, layer)
+
+            # Analyse the layer with the appropriate parser
+            if layer_name in parsers:
+                session.protocol = layer_name.upper()
+                are_credentials_valid = parsers[layer_name].analyse(session, layer)
+
+            if are_credentials_valid:
+                session.validate_credentials()
+
     if string_inspection:
         strings = utils.extract_strings_splitted_on_end_of_line_from(packet)
         emails_found = extract.extract_emails(strings)
         credit_cards_found = extract.extract_credit_cards(strings)
 
         for email in emails_found:
-            logger.info("Found email address: " + email)
+            logger.info(session, "Found email address: " + email)
 
         for credit_card in credit_cards_found:
-            logger.info("Credit card '{}' found: '{}'".format(credit_card.name, credit_card.number))
-
-    if len(packet.layers) > 3:  # == tshark parsed something else than ETH, IP, TCP
-
-        session = sessions.get_session_of(packet)
-
-        for layer in packet.layers[3:]:
-            layer_name = layer.layer_name
-
-            if hasattr(layer, "ntlmssp_identifier") and layer.ntlmssp_identifier == "NTLMSSP":
-                ntlmssp.analyse(session, layer)
-
-            elif layer_name in parsers:
-                parsers[layer_name].analyse(session, layer)
+            logger.info(session, "Credit card '{}' found: '{}'".format(credit_card.name, credit_card.number))
 
 
-def process_pcap(filename: str):
+def process_pcap(filename: str) -> SessionList:
 
-    global string_inspection
+    global string_inspection, _sessions
+
+    _sessions = SessionList()
 
     if string_inspection is None:
         string_inspection = True
@@ -63,23 +75,26 @@ def process_pcap(filename: str):
 
     start_time = time.time()
 
-    # TODO: at given time (every INACTIVE_SESSION_DELAY seconds ?) clean inactive sessions, log uncomplete credentials ?
-
     for packet in pcap:
         _process_packet(packet)
 
+    _sessions.process_sessions_remaining_content()
+
     logger.debug("Processed in {0:.3f} seconds.".format(time.time() - start_time))
+    return _sessions
 
 
 def active_processing(interface: str):
 
-    global string_inspection
+    global string_inspection, _sessions
+
+    _sessions = SessionList()
 
     if string_inspection is None:
         string_inspection = False
 
     signal.signal(signal.SIGINT, signal_handler)
-    sessions.manage_outdated_sessions()
+    _sessions.manage_outdated_sessions()
 
     logger.info("Listening on {}...".format(interface))
     live = pyshark.LiveCapture(interface=interface)

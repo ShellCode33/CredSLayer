@@ -3,7 +3,6 @@ from pyshark.packet.layer import Layer
 
 from ncm.core import logger
 from ncm.core.session import Session
-from ncm.core.utils import Credentials
 
 POTENTIAL_USERNAME_ASK = ["login:", "username:", "user:", "name:"]
 POTENTIAL_AUTH_SUCCESS = ["last login", "welcome"]
@@ -27,10 +26,12 @@ def _is_username_duplicated(username):
     return True
 
 
-def analyse(session: Session, layer: Layer) -> Credentials:
+def analyse(session: Session, layer: Layer) -> bool:
 
     if not hasattr(layer, "data"):
-        return None
+        return False
+
+    current_creds = session.credentials_being_built
 
     if session["data_being_built"] is None:
         session["data_being_built"] = ""
@@ -53,11 +54,11 @@ def analyse(session: Session, layer: Layer) -> Credentials:
         elif lowered_data.strip() == "password:":
             session["pass_being_built"] = True
 
-        elif session["password"]:
+        elif current_creds.password:
             for auth_success_msg in POTENTIAL_AUTH_SUCCESS:
                 if auth_success_msg in lowered_data:
-                    logger.found("TELNET", "credentials found: {} -- {}".format(session["username"], session["password"]))
-                    return Credentials(session["username"], session["password"])
+                    logger.found(session, "credentials found: {} -- {}".format(current_creds.username, current_creds.password))
+                    return True
 
         else:
             session["data_being_built"] += data
@@ -73,11 +74,13 @@ def analyse(session: Session, layer: Layer) -> Credentials:
                     if _is_username_duplicated(username):
                         username = "".join([username[i] for i in range(0, len(username), 2)])
 
-                    session["username"] = username
+                    current_creds.username = username
                     session["user_being_built"] = False
 
                 elif session["pass_being_built"]:
-                    session["password"] = data_being_built
+                    current_creds.password = data_being_built
                     session["pass_being_built"] = False
 
                 session["data_being_built"] = ""
+
+    return False

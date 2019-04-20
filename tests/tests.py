@@ -1,38 +1,11 @@
+import os
 import unittest
 
-import os
-from typing import List
-
 from pyshark import FileCapture
+
 from ncm.core import extract, utils
-from ncm.core.session import SessionList
+from ncm.core.manager import process_pcap
 from ncm.core.utils import Credentials, CreditCard
-from ncm.parsers import parsers
-
-
-def _extract_creds_from(pcap_filename, layer_name) -> List[Credentials]:
-    pcap = FileCapture(pcap_filename)
-    parser = parsers[layer_name]
-    credentials_list = []
-    sessions = SessionList()
-
-    for packet in pcap:
-
-        if "tcp" not in packet and "udp" not in packet:
-            continue
-
-        session = sessions.get_session_of(packet)
-
-        if layer_name in packet:  # If the layer is in the packet
-            creds = parser.analyse(session, packet[layer_name])
-
-            if creds:
-                sessions.remove(session)
-                credentials_list.append(creds)
-
-    pcap.close()
-    del sessions
-    return credentials_list
 
 
 class ParsersTest(unittest.TestCase):
@@ -44,56 +17,100 @@ class ParsersTest(unittest.TestCase):
         os.chdir(directory)
 
     def test_telnet(self):
-        self.assertTrue(Credentials('fake', 'user') in _extract_creds_from("samples/telnet-cooked.pcap", "telnet"))
-        self.assertTrue(Credentials('fake', 'user') in _extract_creds_from("samples/telnet-raw.pcap", "telnet"))
-        self.assertTrue(Credentials('Administrator', 'napier') in _extract_creds_from("samples/telnet-raw2.pcap", "telnet"))
+        credentials_list = process_pcap("samples/telnet-cooked.pcap").get_list_of_all_credentials()
+        print(credentials_list)
+        self.assertTrue(Credentials('fake', 'user') in credentials_list)
+        self.assertTrue(len(credentials_list) == 1)
+
+        credentials_list = process_pcap("samples/telnet-raw.pcap").get_list_of_all_credentials()
+        print(credentials_list)
+        self.assertTrue(Credentials('fake', 'user') in credentials_list)
+        self.assertTrue(len(credentials_list) == 1)
+
+        credentials_list = process_pcap("samples/telnet-raw2.pcap").get_list_of_all_credentials()
+        print(credentials_list)
+        self.assertTrue(Credentials('Administrator', 'napier') in credentials_list)
+        self.assertTrue(len(credentials_list) == 1)
 
     def test_ftp(self):
-        self.assertTrue(Credentials('anonymous', 'ftp@example.com') in _extract_creds_from("samples/ftp.pcap", "ftp"))
+        credentials_list = process_pcap("samples/ftp.pcap").get_list_of_all_credentials()
+        print(credentials_list)
+        self.assertTrue(Credentials('anonymous', 'ftp@example.com') in credentials_list)
+        self.assertTrue(len(credentials_list) == 1)
 
     def test_smtp(self):
-        self.assertTrue(Credentials('gurpartap@patriots.in', 'punjab@123') in _extract_creds_from("samples/smtp.pcap", "smtp"))
+        credentials_list = process_pcap("samples/smtp.pcap").get_list_of_all_credentials()
+        print(credentials_list)
+        self.assertTrue(Credentials('gurpartap@patriots.in', 'punjab@123') in credentials_list)
+        self.assertTrue(len(credentials_list) == 1)
 
     def test_imap(self):
-        self.assertTrue(Credentials('neulingern', 'XXXXXX') in _extract_creds_from("samples/imap.pcap", "imap"))
+        credentials_list = process_pcap("samples/imap.pcap").get_list_of_all_credentials()
+        print(credentials_list)
+        self.assertTrue(Credentials('neulingern', 'XXXXXX') in credentials_list)
+        self.assertTrue(len(credentials_list) == 1)
 
     def test_pop(self):
-        self.assertTrue(Credentials('digitalinvestigator@networksims.com', 'napier123') in _extract_creds_from("samples/pop3.pcap", "pop"))
+        credentials_list = process_pcap("samples/pop3.pcap").get_list_of_all_credentials()
+        print(credentials_list)
+        self.assertTrue(Credentials('digitalinvestigator@networksims.com', 'napier123') in credentials_list)
+        self.assertTrue(len(credentials_list) == 2)
 
     def test_http_basic_auth(self):
-        credentials_list = _extract_creds_from("samples/http-basic-auth.pcap", "http")
+        credentials_list = process_pcap("samples/http-basic-auth.pcap").get_list_of_all_credentials()
+        print(credentials_list)
         self.assertTrue(Credentials('test', 'test') in credentials_list)
         self.assertFalse(Credentials('test', 'fail') in credentials_list)
         self.assertFalse(Credentials('test', 'fail2') in credentials_list)
         self.assertFalse(Credentials('test', 'fail3') in credentials_list)
+        self.assertTrue(len(credentials_list) == 6)
 
     def test_http_post_auth(self):
-        self.assertTrue(Credentials('toto', 'Str0ngP4ssw0rd') in _extract_creds_from("samples/http-post-auth.pcap", "http"))
+        credentials_list = process_pcap("samples/http-post-auth.pcap").get_list_of_all_credentials()
+        print(credentials_list)
+        self.assertTrue(Credentials('toto', 'Str0ngP4ssw0rd') in credentials_list)
+        self.assertTrue(len(credentials_list) == 1)
 
     def test_http_get_auth(self):
-        self.assertTrue(Credentials('admin', 'qwerty1234') in _extract_creds_from("samples/http-get-auth.pcap", "http"))
+        credentials_list = process_pcap("samples/http-get-auth.pcap").get_list_of_all_credentials()
+        print(credentials_list)
+        self.assertTrue(Credentials('admin', 'qwerty1234') in credentials_list)
+        self.assertTrue(len(credentials_list) == 1)
 
     def test_ldap(self):
-        credentials_list = _extract_creds_from("samples/ldap-simpleauth.pcap", "ldap")
+        credentials_list = process_pcap("samples/ldap-simpleauth.pcap").get_list_of_all_credentials()
+        print(credentials_list)
         self.assertTrue(Credentials("xxxxxxxxxxx@xx.xxx.xxxxx.net", "passwor8d1") in credentials_list)
         self.assertTrue(Credentials("CN=xxxxxxxx,OU=Users,OU=Accounts,DC=xx,"
                                     "DC=xxx,DC=xxxxx,DC=net", "/dev/rdsk/c0t0d0s0") in credentials_list)
+        self.assertTrue(len(credentials_list) == 2)
 
     def test_snmp(self):
-        credentials_list = _extract_creds_from("samples/snmp-v1.pcap", "snmp")
+        credentials_list = process_pcap("samples/snmp-v1.pcap").get_list_of_all_credentials()
+        print(credentials_list)
         self.assertTrue(Credentials(password="public") in credentials_list)
+        self.assertTrue(len(credentials_list) == 1)
 
-        credentials_list = _extract_creds_from("samples/snmp-v3.pcap", "snmp")
+        credentials_list = process_pcap("samples/snmp-v3.pcap").get_list_of_all_credentials()
+        print(credentials_list)
         self.assertTrue(Credentials(username="pippo") in credentials_list)
         self.assertTrue(Credentials(username="pippo2") in credentials_list)
         self.assertTrue(Credentials(username="pippo3") in credentials_list)
         self.assertTrue(Credentials(username="pippo4") in credentials_list)
+        self.assertTrue(len(credentials_list) == 4)
 
     def test_mysql(self):
-        self.assertTrue(Credentials("tfoerste", hash="eefd6d5562851bc5966a0b41236ae3f2315efcc4", salt=[">~$4uth,", ">612IWZ>fhWX"])
-                        in _extract_creds_from("samples/mysql.pcap", "mysql"))
-        self.assertTrue(Credentials("user10", hash="55ee72f0c6694cbb3a104eb97f8ee32a6a91f8b1", salt=["]E!r<uX8", "Of2c!tIM)\"n'"])
-                        in _extract_creds_from("samples/mysql2.pcap", "mysql"))
+        credentials_list = process_pcap("samples/mysql.pcap").get_list_of_all_credentials()
+        print(credentials_list)
+        self.assertTrue(Credentials("tfoerste", hash="eefd6d5562851bc5966a0b41236ae3f2315efcc4", context={"salt": ">~$4uth,", "salt2": ">612IWZ>fhWX"})
+                        in credentials_list)
+        self.assertTrue(len(credentials_list) == 1)
+
+        credentials_list = process_pcap("samples/mysql2.pcap").get_list_of_all_credentials()
+        print(credentials_list)
+        self.assertTrue(Credentials("user10", hash="55ee72f0c6694cbb3a104eb97f8ee32a6a91f8b1", context={"salt": "]E!r<uX8", "salt2": "Of2c!tIM)\"n'"})
+                        in credentials_list)
+        self.assertTrue(len(credentials_list) == 1)
 
 
 class ExtractTest(unittest.TestCase):
@@ -114,6 +131,8 @@ class ExtractTest(unittest.TestCase):
 
         pcap.close()
 
+        print(emails_found)
+
         self.assertTrue(len(emails_found) >= 46)
         self.assertTrue("nutmeg12s@hotmail.com" in emails_found)
         self.assertTrue("SharpJDs@yahoo.com" in emails_found)
@@ -131,6 +150,8 @@ class ExtractTest(unittest.TestCase):
 
         pcap.close()
 
+        print(emails_found)
+
         self.assertTrue(len(emails_found) == 1)
         self.assertTrue("xxxxxxxxxxx@xx.xxx.xxxxx.net" in emails_found)
 
@@ -145,6 +166,8 @@ class ExtractTest(unittest.TestCase):
 
         pcap.close()
 
+        print(credit_cards_found)
+
         self.assertTrue(CreditCard("Visa", "4111-4000-4321-3210") in credit_cards_found)
         self.assertTrue(CreditCard("Visa", "4321 4444 3214 3212") in credit_cards_found)
         self.assertTrue(CreditCard("Mastercard", "5555 5555 5555 5555") in credit_cards_found)
@@ -158,6 +181,8 @@ class ExtractTest(unittest.TestCase):
             credit_cards_found |= extract.extract_credit_cards(strings)
 
         pcap.close()
+
+        print(credit_cards_found)
         self.assertTrue(len(credit_cards_found) == 0)
 
 
@@ -181,8 +206,9 @@ class SessionsTest(unittest.TestCase):
 
         pcap.close()
 
+        print(sessions)
         self.assertTrue(len(sessions) == 1)
-        self.assertTrue("TCP 10.10.30.26:43958 | 129.21.171.72:21" in sessions)
+        self.assertTrue("TCP 10.10.30.26:43958 <-> 129.21.171.72:21" in sessions)
 
         sessions.clear()
 
@@ -194,10 +220,11 @@ class SessionsTest(unittest.TestCase):
 
         pcap.close()
 
+        print(sessions)
         self.assertTrue(len(sessions) == 3)
-        self.assertTrue("TCP 131.151.32.21:4167 | 131.151.37.122:143" in sessions)
-        self.assertTrue("TCP 131.151.32.91:3614 | 131.151.37.122:1065" in sessions)
-        self.assertTrue("TCP 131.151.32.91:1065 | 131.151.37.117:1065" in sessions)
+        self.assertTrue("TCP 131.151.32.21:4167 <-> 131.151.37.122:143" in sessions)
+        self.assertTrue("TCP 131.151.32.91:3614 <-> 131.151.37.122:1065" in sessions)
+        self.assertTrue("TCP 131.151.32.91:1065 <-> 131.151.37.117:1065" in sessions)
 
         sessions.clear()
 
@@ -209,9 +236,10 @@ class SessionsTest(unittest.TestCase):
 
         pcap.close()
 
+        print(sessions)
         self.assertTrue(len(sessions) == 3)
-        self.assertTrue("UDP 172.31.19.54 | 172.31.19.73" in sessions)
-        self.assertTrue("UDP 172.31.19.73 | 224.0.1.35" in sessions)
-        self.assertTrue("UDP 172.31.19.255 | 172.31.19.73" in sessions)
+        self.assertTrue("UDP 172.31.19.73 <-> 172.31.19.54" in sessions)
+        self.assertTrue("UDP 224.0.1.35 <-> 172.31.19.73" in sessions)
+        self.assertTrue("UDP 172.31.19.255 <-> 172.31.19.73" in sessions)
 
         # TODO: add more session tests

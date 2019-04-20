@@ -3,26 +3,29 @@ from pyshark.packet.layer import Layer
 
 from ncm.core import logger
 from ncm.core.session import Session
-from ncm.core.utils import Credentials
 
 
-def analyse(session: Session, layer: Layer) -> Credentials:
+def analyse(session: Session, layer: Layer) -> bool:
+
+    current_creds = session.credentials_being_built
 
     if hasattr(layer, "response_code"):
         code = int(layer.response_code)
 
-        if code == 230 and session["username"] and session["password"]:
-            logger.found("FTP", "credentials found: {} -- {}".format(session["username"], session["password"]))
-            return Credentials(session["username"], session["password"])
+        if code == 230 and current_creds.username:
+            logger.found(session, "credentials found: {} -- {}".format(current_creds.username, current_creds.password))
+            return True
 
         elif code == 430:
-            session["username"] = session["password"] = None
+            session.invalidate_credentials_and_clear_session()
 
     elif hasattr(layer, "request_command"):
         command = layer.request_command
 
         if command == "USER":
-            session["username"] = layer.request_arg
+            current_creds.username = layer.request_arg
 
         elif command == "PASS":
-            session["password"] = layer.request_arg
+            current_creds.password = layer.request_arg
+
+    return False

@@ -6,10 +6,11 @@ from pyshark.packet.layer import Layer
 
 from ncm.core import utils, logger
 from ncm.core.session import Session
-from ncm.core.utils import Credentials
 
 
-def analyse(session: Session, layer: Layer) -> Credentials:
+def analyse(session: Session, layer: Layer) -> bool:
+
+    current_creds = session.credentials_being_built
 
     if hasattr(layer, "req_command"):
         command = layer.req_command
@@ -27,22 +28,24 @@ def analyse(session: Session, layer: Layer) -> Credentials:
     if session["auth_process_login"]:
         if hasattr(layer, "auth_username"):
             username = layer.auth_username
-            session["username"] = b64decode(username).decode()
+            current_creds.username = b64decode(username).decode()
 
         elif hasattr(layer, "auth_password"):
             password = layer.auth_password
-            session["password"] = b64decode(password).decode()
+            current_creds.password = b64decode(password).decode()
             session["auth_process_login"] = False
 
     elif session["auth_process_plain"]:
         if hasattr(layer, "auth_username"):
             b64_auth = layer.auth_username
-            session["username"], session["password"] = utils.parse_sasl_creds(b64_auth, "PLAIN")
+            current_creds.username, current_creds.password = utils.parse_sasl_creds(b64_auth, "PLAIN")
             session["auth_process_plain"] = False
 
     if hasattr(layer, "response_code"):
         response_code = int(layer.response_code)
 
         if response_code == 235:
-            logger.found("SMTP", "credentials found: {} -- {}".format(session["username"], session["password"]))
-            return Credentials(session["username"], session["password"])
+            logger.found(session, "credentials found: {} -- {}".format(current_creds.username, current_creds.password))
+            return True
+
+    return False

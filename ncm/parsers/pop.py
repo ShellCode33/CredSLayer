@@ -3,10 +3,11 @@ from pyshark.packet.layer import Layer
 
 from ncm.core import utils, logger
 from ncm.core.session import Session
-from ncm.core.utils import Credentials
 
 
-def analyse(session: Session, layer: Layer) -> Credentials:
+def analyse(session: Session, layer: Layer) -> bool:
+
+    current_creds = session.credentials_being_built
 
     if hasattr(layer, "request_command"):
         command = layer.request_command
@@ -21,14 +22,16 @@ def analyse(session: Session, layer: Layer) -> Credentials:
 
         elif session["auth_process_plain"]:
             session["auth_process_plain"] = False
-            session["username"], session["password"] = utils.parse_sasl_creds(command, "PLAIN")
+            current_creds.username, current_creds.password = utils.parse_sasl_creds(command, "PLAIN")
 
-    if session["username"] and hasattr(layer, "response_indicator"):
+    if current_creds.username and hasattr(layer, "response_indicator"):
         indicator = layer.response_indicator
 
         if indicator == "+OK":
-            logger.found("POP", "credentials found: {} -- {}".format(session["username"], session["password"]))
-            return Credentials(session["username"], session["password"])
+            logger.found(session, "credentials found: {} -- {}".format(current_creds.username, current_creds.password))
+            return True
 
         elif indicator == "-ERR":
-            session["username"] = session["password"] = None
+            session.invalidate_credentials_and_clear_session()
+
+    return False

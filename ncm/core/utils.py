@@ -2,20 +2,55 @@
 import base64
 import re
 from collections import namedtuple
-from typing import List
 from string import printable as printable_charset
+from typing import List
+
 from pyshark.packet.packet import Packet
 
-Credentials = namedtuple('Credentials', ['username', 'password', 'hash', 'salt'])
-Credentials.__new__.__defaults__ = (None,) * len(Credentials._fields)  # Create username and password default values
-
 CreditCard = namedtuple("CreditCard", ['name', 'number'])
-
 STRING_EXTRACT_REGEX = re.compile(b"[^" + printable_charset.encode() + b"]+")
 
 
-def extract_strings_from(packet: Packet) -> List[str]:
+class Credentials(object):
 
+    def __init__(self, username=None, password=None, hash=None, context=None):
+        self.username = username
+        self.password = password
+        self.hash = hash
+        self.context = context if context else {}
+
+    def __eq__(self, other):
+
+        for item in self.context:
+            if item not in other.context or self.context[item] != other.context[item]:
+                return False
+
+        return self.username == other.username \
+               and self.password == other.password \
+               and self.hash == other.hash
+
+    def __repr__(self):
+        string = ""
+
+        if self.username:
+            string += self.username + " -- "
+
+        if self.password:
+            string += self.password + " -- "
+
+        if self.hash:
+            string += self.hash + " -- "
+
+        if self.context:
+            string += str(self.context) + " -- "
+
+        return string[:-4]
+
+    def is_empty(self):
+        return self.username is None and self.password is None and self.hash is None
+
+
+def extract_strings_from(packet: Packet) -> List[str]:
     if "tcp" not in packet or not hasattr(packet["tcp"], "payload"):
         return []
 
