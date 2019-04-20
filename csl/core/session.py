@@ -14,23 +14,31 @@ class Session(dict):
 
     def __init__(self, packet: Packet):
         super().__init__()
-        proto_id = int(packet.ip.proto)
+
+        if "ipv6" in packet:
+            ip_type = "ipv6"
+            proto_id = int(getattr(packet, ip_type).nxt)
+        elif "ip" in packet:
+            ip_type = "ip"
+            proto_id = int(getattr(packet, ip_type).proto)
+        else:
+            raise Exception("IP layer not found")
 
         if proto_id == 6:
             self.protocol = "tcp"
-            src = "{}:{}".format(packet.ip.src, packet.tcp.srcport)
-            dst = "{}:{}".format(packet.ip.dst, packet.tcp.dstport)
+            src = "{}:{}".format(packet[ip_type].src, packet.tcp.srcport)
+            dst = "{}:{}".format(packet[ip_type].dst, packet.tcp.dstport)
         elif proto_id == 17:
             self.protocol = "udp"
             # We don't track UDP "sessions" using port because client's port changes every time...
-            src = packet.ip.src
-            dst = packet.ip.dst
+            src = packet[ip_type].src
+            dst = packet[ip_type].dst
         else:
             raise Exception("Unsupported protocol id: " + str(proto_id))
 
         if packet[self.protocol].srcport == packet[self.protocol].dstport:
             # Alphabetic ordering on IP addresses if ports are the same
-            if packet.ip.src < packet.ip.dst:
+            if packet[ip_type].src < packet[ip_type].dst:
                 self._session_string_representation = src + " <-> " + dst
             else:
                 self._session_string_representation = dst + " <-> " + src
