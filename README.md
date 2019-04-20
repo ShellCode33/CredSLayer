@@ -1,11 +1,11 @@
-# NetCredzMiner
+# CredSLayer
 
 ![alt python_version](https://img.shields.io/badge/python-3.5+-informational.svg)
 ![alt tests_coverage](https://img.shields.io/badge/tests%20coverage-94%25-success.svg)
 
 You thought PCredz was good ? Net-creds even better ? Try this out, you'll be surprised !
 
-NCM goal is to look for credentials and other useful stuff in network captures. Two modes are available, pcap scanning and active processing. The latest listens for packets on a chosen interface and dynamically extracts everything it can.
+CredSLayer goal is to look for credentials and other useful stuff in network captures. Two modes are available, pcap scanning and active processing. The latest listens for packets on a chosen interface and dynamically extracts everything it can.
 
 This tool is really helpful if you're a pentester or if you want to scan your own network to see if anything critical is sent over. 
 
@@ -20,16 +20,12 @@ Right now, NetCredzMiner supports the following protocols:
 * HTTP
 * LDAP
 * HTTP
+* SNMP
+* MySQL
 
-It is also able to look for email addresses, credit card numbers, visited URLs.
+It is also able to look for email addresses, credit card numbers.
 
 Because it uses Wireshark dissectors, it's really easy to write new ones. Understand: more will come.
-
-# Tests
-
-A lot of unit tests have been made in order to prevent unexpected behavior from happening. Of course no software is perfect, if you spot anything weird, please open an issue.
-
-**Note:** This tool has been tested using tshark 3.0.0 and Python 3.7
 
 # Credits
 

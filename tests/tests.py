@@ -3,9 +3,9 @@ import unittest
 
 from pyshark import FileCapture
 
-from ncm.core import extract, utils
-from ncm.core.manager import process_pcap
-from ncm.core.utils import Credentials, CreditCard
+from csl.core import extract, utils
+from csl.core.manager import process_pcap
+from csl.core.utils import Credentials, CreditCard
 
 
 class ParsersTest(unittest.TestCase):
@@ -195,7 +195,7 @@ class SessionsTest(unittest.TestCase):
         os.chdir(directory)
 
     def test_sessions_extract(self):
-        from ncm.core.session import SessionList
+        from csl.core.session import SessionList
 
         sessions = SessionList()
 

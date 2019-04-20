@@ -5,9 +5,9 @@ import time
 import pyshark
 from pyshark.packet.packet import Packet
 
-from ncm.core import logger, extract, utils
-from ncm.core.session import SessionList
-from ncm.parsers import parsers, ntlmssp
+from csl.core import logger, extract, utils
+from csl.core.session import SessionList
+from csl.parsers import parsers, ntlmssp
 
 string_inspection = None
 _sessions = None

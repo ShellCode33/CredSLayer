@@ -2,8 +2,8 @@
 
 from pyshark.packet.layer import Layer
 
-from ncm.core import logger
-from ncm.core.session import Session
+from csl.core import logger
+from csl.core.session import Session
 
 
 def analyse(session: Session, layer: Layer) -> bool:

@@ -6,7 +6,7 @@ import traceback
 
 import argcomplete
 
-from ncm.core import manager, logger
+from csl.core import manager, logger
 
 if __name__ == "__main__":
 

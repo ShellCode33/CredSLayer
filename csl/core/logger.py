@@ -1,5 +1,5 @@
 # coding: utf-8
-from ncm.core.session import Session
+from csl.core.session import Session
 
 
 class Color(object):

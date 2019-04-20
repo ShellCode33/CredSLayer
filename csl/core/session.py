@@ -5,7 +5,7 @@ from threading import Thread
 
 from pyshark.packet.packet import Packet
 
-from ncm.core.utils import Credentials
+from csl.core.utils import Credentials
 
 
 class Session(dict):
@@ -106,7 +106,7 @@ class SessionList(list):
         self._thread.start()
 
     def _manage(self):
-        from ncm.core import logger
+        from csl.core import logger
 
         while True:
 
@@ -127,7 +127,7 @@ class SessionList(list):
             self.remove(session)
 
     def process_sessions_remaining_content(self):
-        from ncm.core import logger
+        from csl.core import logger
         # List things that haven't been reported (sometimes the success indicator has
         # not been captured and credentials stay in the session without being logged)
         for session in self:

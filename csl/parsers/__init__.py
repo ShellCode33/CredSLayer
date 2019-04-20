@@ -8,5 +8,5 @@ _module_names = [os.path.splitext(_file)[0] for _file in os.listdir(_script_dir)
 parsers = {}
 
 for module_name in _module_names:
-    module = import_module("ncm.parsers." + module_name)
+    module = import_module("csl.parsers." + module_name)
     parsers[module_name] = module
