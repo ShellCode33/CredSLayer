@@ -2,6 +2,7 @@
 
 import time
 from threading import Thread
+from typing import List
 
 from pyshark.packet.packet import Packet
 
@@ -134,14 +135,19 @@ class SessionList(list):
         for session in sessions_to_remove:
             self.remove(session)
 
-    def process_sessions_remaining_content(self):
+    def process_sessions_remaining_content(self) -> List[Credentials]:
+
         from csl.core import logger
-        # List things that haven't been reported (sometimes the success indicator has
-        # not been captured and credentials stay in the session without being logged)
-        for session in self:
-            if not session.credentials_being_built.is_empty():
-                logger.info(session, "Something interesting has been found but the tool weren't able validate it: ")
+        remaining = [session for session in self if not session.credentials_being_built.is_empty()]
+
+        if len(remaining) > 0:
+            logger.info("Interesting things have been found but the tool weren't able validate them: ")
+            # List things that haven't been reported (sometimes the success indicator has
+            # not been captured and credentials stay in the session without being logged)
+            for session in remaining:
                 logger.info(session, str(session.credentials_being_built))
+
+        return remaining
 
     def get_list_of_all_credentials(self):
         all_credentials = []
