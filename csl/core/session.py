@@ -44,7 +44,7 @@ class Session(dict):
                 self._session_string_representation = dst + " <-> " + src
 
         # Ordering based on port number
-        elif packet[self.protocol].srcport < packet[self.protocol].dstport:
+        elif int(packet[self.protocol].srcport) > int(packet[self.protocol].dstport):
             self._session_string_representation = src + " <-> " + dst
         else:
             self._session_string_representation = dst + " <-> " + src
