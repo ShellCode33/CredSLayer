@@ -238,8 +238,8 @@ class SessionsTest(unittest.TestCase):
 
         print(sessions)
         self.assertTrue(len(sessions) == 3)
-        self.assertTrue("UDP 172.31.19.73 <-> 172.31.19.54" in sessions)
-        self.assertTrue("UDP 224.0.1.35 <-> 172.31.19.73" in sessions)
+        self.assertTrue("UDP 172.31.19.54 <-> 172.31.19.73" in sessions)
+        self.assertTrue("UDP 172.31.19.73 <-> 224.0.1.35" in sessions)
         self.assertTrue("UDP 172.31.19.255 <-> 172.31.19.73" in sessions)
 
         # TODO: add more session tests
