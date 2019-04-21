@@ -53,6 +53,9 @@ def analyse(session: Session, layer: Layer) -> bool:
                 except UnicodeDecodeError:
                     logger.error("HTTP Basic auth failed: " + tokens)
 
+            elif len(tokens) == 2 and tokens[0] == "NTLM":
+                pass  # Already handled by the NTLMSSP module
+
             else:
                 logger.info(session, "Authorization header found: '{}'".format(layer.authorization))
 

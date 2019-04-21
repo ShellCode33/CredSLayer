@@ -34,10 +34,8 @@ def _process_packet(packet: Packet):
         for layer in packet.layers[3:]:
             layer_name = layer.layer_name
 
-            are_credentials_valid = False
-
             # Not based on layer name, can be found in different layers
-            if hasattr(layer, "ntlmssp_identifier") and layer.ntlmssp_identifier == "NTLMSSP":
+            if hasattr(layer, "nt_status") or (hasattr(layer, "ntlmssp_identifier") and layer.ntlmssp_identifier == "NTLMSSP"):
                 session.protocol = layer_name.upper()
                 are_credentials_valid = ntlmssp.analyse(session, layer)
 
