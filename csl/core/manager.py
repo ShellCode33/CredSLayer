@@ -41,13 +41,16 @@ def _process_packet(packet: Packet):
                 session.protocol = layer_name.upper()
                 are_credentials_valid = ntlmssp.analyse(session, layer)
 
+                if are_credentials_valid:
+                    session.validate_credentials()
+
             # Analyse the layer with the appropriate parser
             if layer_name in parsers:
                 session.protocol = layer_name.upper()
                 are_credentials_valid = parsers[layer_name].analyse(session, layer)
 
-            if are_credentials_valid:
-                session.validate_credentials()
+                if are_credentials_valid:
+                    session.validate_credentials()
 
     if string_inspection:
         strings = utils.extract_strings_splitted_on_end_of_line_from(packet)
