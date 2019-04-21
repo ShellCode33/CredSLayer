@@ -3,13 +3,11 @@
 ![alt python_version](https://img.shields.io/badge/python-3.5+-informational.svg)
 ![alt tests_coverage](https://img.shields.io/badge/tests%20coverage-94%25-success.svg)
 
-You thought PCredz was good ? Net-creds even better ? Try this out, you'll be surprised !
-
 CredSLayer goal is to look for credentials and other useful stuff in network captures. Two modes are available, pcap scanning and active processing. The latest listens for packets on a chosen interface and dynamically extracts everything it can.
 
-This tool is really helpful if you're a pentester or if you want to scan your own network to see if anything critical is sent over. 
+Have you heard about [Pcredz](https://github.com/lgandx/PCredz) or [net-creds](https://github.com/DanMcInerney/net-creds) ? Well this tool pushes the boundaries even further by using Wireshark dissectors, it's therefore more accurate and reliable.
 
-The code is based on [pyshark](https://github.com/KimiNewt/pyshark). It basically gives an access to Wireshark dissectors, resulting in an incredible amount of supported protocols. 
+This tool is really helpful if you're a pentester or if you want to scan your own network to see if anything critical is sent over.  
 
 # Features
 
@@ -19,7 +17,6 @@ Right now, CredSLayer supports the following protocols:
 * Telnet
 * HTTP
 * LDAP
-* HTTP
 * SNMP
 * MySQL
 * NTLMSSP
@@ -84,6 +81,8 @@ Otherwise, to create a simple module, there are a few things you need to know :
 Good luck ! If you need help to understand something, feel free to contact me : shellcode33{at}protonmail.ch  
 
 # Credits
+
+* CredSLayer is based on [pyshark](https://github.com/KimiNewt/pyshark), a tshark Python wrapper
 
 * Wireshark for their [pcaps](https://wiki.wireshark.org/SampleCaptures)
 
