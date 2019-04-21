@@ -7,6 +7,7 @@ from pyshark.packet.layer import Layer
 
 from csl.core import logger
 from csl.core.session import Session
+from csl.core.utils import Credentials
 
 HTTP_IGNORED_EXTENSIONS = ["css", "ico", "png", "jpg", "jpeg", "gif", "js"]
 HTTP_METHODS = ["OPTIONS", "GET", "HEAD", "POST", "PUT", "DELETE", "TRACE", "CONNECT"]
@@ -56,49 +57,57 @@ def analyse(session: Session, layer: Layer) -> bool:
                 logger.info(session, "Authorization header found: '{}'".format(layer.authorization))
 
         # POST parameters
-        elif hasattr(layer, "file_data"):
+        if hasattr(layer, "file_data"):
             post_content = layer.file_data
 
             if len(post_content) <= HTTP_AUTH_MAX_LOGIN_POST_LENGTH:
                 logger.info(session, "POST data found: '{}'".format(post_content))
                 post_parameters = parse_qs(post_content)
 
-                session.invalidate_credentials_and_clear_session()
-                current_creds = session.credentials_being_built
+                # We don't want to interfere with the Authorization header potentially being built
+                credentials = Credentials()
 
-                current_creds.context["Method"] = "POST"
-                current_creds.context["URL"] = layer.request_full_uri
+                credentials.context["Method"] = "POST"
+                credentials.context["URL"] = layer.request_full_uri
+
+                logger.info(session, "context: " + str(credentials.context))
 
                 for parameter in post_parameters:
                     if parameter in HTTP_AUTH_POTENTIAL_USERNAMES:
-                        current_creds.username = post_parameters[parameter][0]
+                        credentials.username = post_parameters[parameter][0]
                     elif parameter in HTTP_AUTH_POTENTIAL_PASSWORDS:
-                        current_creds.password = post_parameters[parameter][0]
+                        credentials.password = post_parameters[parameter][0]
 
-                if current_creds.username:
-                    logger.found(session, "credentials found: {} -- {}".format(current_creds.username, current_creds.password))
-                    return True
+                if credentials.username:
+                    logger.found(session, "credentials found: {} -- {}".format(credentials.username, credentials.password))
+                    session.credentials_list.append(credentials)
+
+                    # We return false to prevent the manager from validating the credentials being built
+                    return False
 
         # GET parameters
         elif hasattr(layer, "request_uri_query"):
             get_parameters = parse_qs(layer.request_uri_query)
 
-            session.invalidate_credentials_and_clear_session()
-            current_creds = session.credentials_being_built
+            # We don't want to interfere with the Authorization header potentially being built
+            credentials = Credentials()
 
-            current_creds.context["Method"] = "GET"
-            current_creds.context["URL"] = layer.request_full_uri
+            credentials.context["Method"] = "GET"
+            credentials.context["URL"] = layer.request_full_uri
 
             for parameter in get_parameters:
                 if parameter in HTTP_AUTH_POTENTIAL_USERNAMES:
-                    current_creds.username = get_parameters[parameter][0]
+                    credentials.username = get_parameters[parameter][0]
                 elif parameter in HTTP_AUTH_POTENTIAL_PASSWORDS:
-                    current_creds.password = get_parameters[parameter][0]
+                    credentials.password = get_parameters[parameter][0]
 
-            if current_creds.username:
-                logger.found(session, "credentials found: {} -- {}".format(current_creds.username, current_creds.password))
-                logger.info(session, "context: " + str(current_creds.context))
-                return True
+            if credentials.username:
+                logger.found(session, "credentials found: {} -- {}".format(credentials.username, credentials.password))
+                logger.info(session, "context: " + str(credentials.context))
+                session.credentials_list.append(credentials)
+
+                # We return false to prevent the manager from validating the credentials being built
+                return False
 
     elif hasattr(layer, "response_for_uri"):
 
