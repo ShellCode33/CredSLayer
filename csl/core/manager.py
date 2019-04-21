@@ -82,6 +82,7 @@ def process_pcap(filename: str) -> SessionList:
     _sessions.process_sessions_remaining_content()
 
     logger.debug("Processed in {0:.3f} seconds.".format(time.time() - start_time))
+    pcap.close()
     return _sessions
 
 
