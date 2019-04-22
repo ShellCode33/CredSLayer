@@ -70,7 +70,7 @@ def process_pcap(filename: str, must_inspect_strings=False, tshark_filter=None, 
     _sessions = SessionList()
 
     pcap = pyshark.FileCapture(filename, display_filter=tshark_filter)
-    logger.debug("Processing packets in '{}'".format(filename))
+    logger.info("Processing packets in '{}'".format(filename))
 
     if debug:
         pcap.set_debug()
@@ -78,11 +78,15 @@ def process_pcap(filename: str, must_inspect_strings=False, tshark_filter=None, 
     start_time = time.time()
 
     for packet in pcap:
-        _process_packet(packet, must_inspect_strings)
+        try:
+            _process_packet(packet, must_inspect_strings)
+        except Exception as e:
+            logger.error("An exception occurred when trying to process {} : {}".format(repr(packet), repr(e)))
+            logger.info("Resuming analysis...")
 
     _sessions.process_sessions_remaining_content()
 
-    logger.debug("Processed in {0:.3f} seconds.".format(time.time() - start_time))
+    logger.info("Processed in {0:.3f} seconds.".format(time.time() - start_time))
     pcap.close()
     return _sessions
 
@@ -105,7 +109,11 @@ def active_processing(interface: str, must_inspect_strings=False, tshark_filter=
 
     try:
         for packet in live.sniff_continuously():
-            _process_packet(packet, must_inspect_strings)
+            try:
+                _process_packet(packet, must_inspect_strings)
+            except Exception as e:
+                logger.error("An exception occurred when trying to process {} : {}".format(repr(packet), repr(e)))
+                logger.info("Resuming analysis...")
 
     except TSharkCrashException:
         logger.error("tshark crashed :( Please report the following error :")
