@@ -46,41 +46,43 @@ def analyse(session: Session, layer: Layer) -> bool:
         except UnicodeDecodeError:
             continue
 
-        lowered_data = data.lower()
+        lowered_data = data.lower().strip()
 
-        if lowered_data.strip() in POTENTIAL_USERNAME_ASK:
-            session["user_being_built"] = True
+        for username_ask in POTENTIAL_USERNAME_ASK:
+            if lowered_data.endswith(username_ask):
+                session["user_being_built"] = True
+                break
 
-        elif lowered_data.strip() == "password:":
-            session["pass_being_built"] = True
+        else:  # Yes for loops have elses ;)
+            if lowered_data.endswith("password:"):
+                session["pass_being_built"] = True
 
-        elif current_creds.password:
-            for auth_success_msg in POTENTIAL_AUTH_SUCCESS:
-                if auth_success_msg in lowered_data:
-                    logger.found(session, "credentials found: {} -- {}".format(current_creds.username, current_creds.password))
-                    return True
+            elif current_creds.password:
+                for auth_success_msg in POTENTIAL_AUTH_SUCCESS:
+                    if auth_success_msg in lowered_data:
+                        logger.found(session, "credentials found: {} -- {}".format(current_creds.username, current_creds.password))
+                        return True
 
-        else:
-            session["data_being_built"] += data
+            else:
+                session["data_being_built"] += data
 
-            if "\r" in session["data_being_built"] or "\n" in session["data_being_built"]:
-                data_being_built = session["data_being_built"].replace("\r", "")\
-                                                                         .replace("\n", "")\
-                                                                         .replace("\x00", "")
+                if "\r" in session["data_being_built"] or "\n" in session["data_being_built"]:
+                    data_being_built = session["data_being_built"].replace("\r", "")\
+                                                                             .replace("\n", "")\
+                                                                             .replace("\x00", "")
+                    if session["user_being_built"]:
+                        username = data_being_built
 
-                if session["user_being_built"]:
-                    username = data_being_built
+                        if _is_username_duplicated(username):
+                            username = "".join([username[i] for i in range(0, len(username), 2)])
 
-                    if _is_username_duplicated(username):
-                        username = "".join([username[i] for i in range(0, len(username), 2)])
+                        current_creds.username = username
+                        session["user_being_built"] = False
 
-                    current_creds.username = username
-                    session["user_being_built"] = False
+                    elif session["pass_being_built"]:
+                        current_creds.password = data_being_built
+                        session["pass_being_built"] = False
 
-                elif session["pass_being_built"]:
-                    current_creds.password = data_being_built
-                    session["pass_being_built"] = False
-
-                session["data_being_built"] = ""
+                    session["data_being_built"] = ""
 
     return False

@@ -33,6 +33,11 @@ class ParsersTest(unittest.TestCase):
         self.assertTrue(Credentials('Administrator', 'napier') in credentials_list)
         self.assertTrue(len(credentials_list) == 1)
 
+        credentials_list = process_pcap("samples/telnet.pcap").get_list_of_all_credentials()
+        print(credentials_list)
+        self.assertTrue(Credentials('shellcode', 'shellcode') in credentials_list)
+        self.assertTrue(len(credentials_list) == 1)
+
     def test_ftp(self):
         credentials_list = process_pcap("samples/ftp.pcap").get_list_of_all_credentials()
         print(credentials_list)
