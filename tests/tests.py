@@ -112,6 +112,18 @@ class ParsersTest(unittest.TestCase):
                         in credentials_list)
         self.assertTrue(len(credentials_list) == 1)
 
+    def test_pgsql(self):
+        credentials_list = process_pcap("samples/pgsql.pcap").get_list_of_all_credentials()
+        print(credentials_list)
+        self.assertTrue(Credentials("oryx", hash="ceffc01dcde7541829deef6b5e9c9142", context={"salt": "ad44ff54", "auth_type": "md5", "database": "mailstore"}) in credentials_list)
+        self.assertTrue(Credentials("oryx", hash="f8f8b884b4ef7cc9ee95e69868cdfa5e", context={"salt": "f211a3ed", "auth_type": "md5", "database": "mailstore"}) in credentials_list)
+        self.assertTrue(len(credentials_list) == 2)
+
+        credentials_list = process_pcap("samples/pgsql-nopassword.pcap").get_list_of_all_credentials()
+        print(credentials_list)
+        self.assertTrue(Credentials("user", context={"database": "dbdb"}) in credentials_list)
+        self.assertTrue(len(credentials_list) == 1)
+
     def test_ntlmssp(self):
         credentials_list = process_pcap("samples/smb-ntlm.pcap").get_list_of_all_credentials()
         print(credentials_list)
