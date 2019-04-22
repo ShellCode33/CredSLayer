@@ -1,27 +1,27 @@
 # coding: utf-8
 import signal
 import time
+import traceback
 
 import pyshark
 from pyshark.packet.packet import Packet
-
+from pyshark.capture.capture import TSharkCrashException
 from csl.core import logger, extract, utils
 from csl.core.session import SessionList
 from csl.parsers import parsers, ntlmssp
 
-string_inspection = None
 _sessions = None
 
 
 def signal_handler(sig, frame):
-    if _sessions:
+
+    if _sessions is not None:
         _sessions.__del__()
 
     print('Bye !')
-    exit(0)
 
 
-def _process_packet(packet: Packet):
+def _process_packet(packet: Packet, must_inspect_strings):
 
     # We only support tcp & udp packets for now
     if "tcp" not in packet and "udp" not in packet:
@@ -50,7 +50,7 @@ def _process_packet(packet: Packet):
                 if are_credentials_valid:
                     session.validate_credentials()
 
-    if string_inspection:
+    if must_inspect_strings:
         strings = utils.extract_strings_splitted_on_end_of_line_from(packet)
         emails_found = extract.extract_emails(strings)
         credit_cards_found = extract.extract_credit_cards(strings)
@@ -62,22 +62,23 @@ def _process_packet(packet: Packet):
             logger.info(session, "Credit card '{}' found: '{}'".format(credit_card.name, credit_card.number))
 
 
-def process_pcap(filename: str) -> SessionList:
+def process_pcap(filename: str, must_inspect_strings=False, tshark_filter=None, debug=False) -> SessionList:
 
-    global string_inspection, _sessions
+    global _sessions
 
+    logger.DEBUG_MODE = debug
     _sessions = SessionList()
 
-    if string_inspection is None:
-        string_inspection = True
-
-    pcap = pyshark.FileCapture(filename)
+    pcap = pyshark.FileCapture(filename, display_filter=tshark_filter)
     logger.debug("Processing packets in '{}'".format(filename))
+
+    if debug:
+        pcap.set_debug()
 
     start_time = time.time()
 
     for packet in pcap:
-        _process_packet(packet)
+        _process_packet(packet, must_inspect_strings)
 
     _sessions.process_sessions_remaining_content()
 
@@ -86,18 +87,27 @@ def process_pcap(filename: str) -> SessionList:
     return _sessions
 
 
-def active_processing(interface: str):
+def active_processing(interface: str, must_inspect_strings=False, tshark_filter=None, debug=False):
 
-    global string_inspection, _sessions
+    global _sessions
 
+    logger.DEBUG_MODE = debug
     _sessions = SessionList()
 
-    if string_inspection is None:
-        string_inspection = False
-
-    signal.signal(signal.SIGINT, signal_handler)
     _sessions.manage_outdated_sessions()
+    signal.signal(signal.SIGINT, signal_handler)
 
+    live = pyshark.LiveCapture(interface=interface, bpf_filter=tshark_filter)
     logger.info("Listening on {}...".format(interface))
-    live = pyshark.LiveCapture(interface=interface)
-    live.apply_on_packets(_process_packet)
+
+    if debug:
+        live.set_debug()
+
+    try:
+        for packet in live.sniff_continuously():
+            _process_packet(packet, must_inspect_strings)
+
+    except TSharkCrashException:
+        logger.error("tshark crashed :( Please report the following error :")
+        traceback.print_exc()
+        signal_handler(None, None)

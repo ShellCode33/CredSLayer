@@ -12,7 +12,13 @@ class Color(object):
     BACKGROUND_RED = "\u001b[41m"
 
 
+DEBUG_MODE = False
+
+
 def debug(*args):
+    if not DEBUG_MODE:
+        return
+
     if len(args) == 2:
         session = args[0]
         msg = args[1]

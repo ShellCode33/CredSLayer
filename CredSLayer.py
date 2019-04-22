@@ -1,5 +1,7 @@
 #!/usr/bin/python3
 # coding: utf-8
+import socket
+
 import argparse
 import os
 import traceback
@@ -23,6 +25,11 @@ if __name__ == "__main__":
                         help='let you specify if you want to look for interesting strings (email addresses, '
                              'credit cards, ...) in network captures. Pretty heavy on the CPU. '
                              'Enabled by default on pcap files, disabled on live captures.')
+    parser.add_argument('-f', '--filter',
+                        metavar='IP',
+                        help='only show packets involving the specified IP.')
+    parser.add_argument('--debug', action='store_true',
+                        help='put CredSLayer and pyshark in debug mode.')
 
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
@@ -30,10 +37,31 @@ if __name__ == "__main__":
     if not args.listen and not args.pcapfiles:
         parser.error("Nothing to do...")
 
+    string_inspection = None
+
     if args.string_inspection == "enable":
-        manager.string_inspection = True
+        string_inspection = True
     elif args.string_inspection == "disable":
-        manager.string_inspection = False
+        string_inspection = False
+
+    ip_filter = None
+
+    if args.filter:
+
+        # tshark display filter
+        try:
+            socket.inet_aton(args.filter)
+            ip_filter = "ip.src == {0} or ip.dst == {0}".format(args.filter)
+        except socket.error:
+            try:
+                socket.inet_pton(socket.AF_INET6, args.filter)
+                ip_filter = "ipv6.src == {0} or ipv6.dst == {0}".format(args.filter)
+            except socket.error:
+                parser.error("Invalid IP address filter")
+
+        # dumpcap capture filter
+        if args.listen:
+            ip_filter = "host " + args.filter
 
     if args.listen:
 
@@ -41,12 +69,20 @@ if __name__ == "__main__":
             print("You must be root to listen on an interface.")
             exit(1)
 
-        manager.active_processing(args.listen)
+        manager.active_processing(args.listen,
+                                  must_inspect_strings=string_inspection,
+                                  tshark_filter=ip_filter,
+                                  debug=args.debug)
+        exit(0)
 
     for pcap in args.pcapfiles:
 
         try:
-            manager.process_pcap(pcap)
+            manager.process_pcap(pcap,
+                                 must_inspect_strings=string_inspection,
+                                 tshark_filter=ip_filter,
+                                 debug=args.debug)
+
         except Exception as e:
             error_str = str(e)
 
