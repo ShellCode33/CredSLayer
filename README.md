@@ -18,12 +18,14 @@ Right now, CredSLayer supports the following protocols:
 * HTTP
 * LDAP
 * SNMP
-* MySQL
+* MySQL / PostgreSQL
 * NTLMSSP
 
 It is also able to look for email addresses and credit card numbers.
 
 # Install
+
+You need Wireshark installed and Python >= 3.5, then do the following :
 
 ```
 $ git clone https://github.com/ShellCode33/CredSLayer.git
@@ -40,7 +42,8 @@ pip package coming soon...
 
 ```
 $ python CredSLayer.py -h                                  
-usage: CredSLayer.py [-h] [-l INTERFACE] [-s {enable,disable}]
+usage: CredSLayer.py [-h] [-l INTERFACE] [-s {enable,disable}] [-f IP]
+                     [--debug]
                      [pcapfiles [pcapfiles ...]]
 
 Helps you find credentials and other interesting stuff in network captures
@@ -57,6 +60,8 @@ optional arguments:
                         strings (email addresses, credit cards, ...) in
                         network captures. Pretty heavy on the CPU. Enabled by
                         default on pcap files, disabled on live captures.
+  -f IP, --filter IP    only show packets involving the specified IP.
+  --debug               put CredSLayer and pyshark in debug mode.
 ```
 
 # Get involved
