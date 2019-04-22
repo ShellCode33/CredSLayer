@@ -4,13 +4,18 @@ import time
 import traceback
 
 import pyshark
-from pyshark.packet.packet import Packet
 from pyshark.capture.capture import TSharkCrashException
+from pyshark.packet.packet import Packet
+
 from csl.core import logger, extract, utils
 from csl.core.session import SessionList
 from csl.parsers import parsers, ntlmssp
 
 _sessions = None
+
+
+class MalformedPacketException(Exception):
+    pass
 
 
 def signal_handler(sig, frame):
@@ -33,6 +38,9 @@ def _process_packet(packet: Packet, must_inspect_strings):
 
         for layer in packet.layers[3:]:
             layer_name = layer.layer_name
+
+            if hasattr(layer, "_ws_malformed_expert"):
+                raise MalformedPacketException("[{}] session contains malformed packet in layer '{}'".format(session, layer_name))
 
             # Not based on layer name, can be found in different layers
             if hasattr(layer, "nt_status") or (hasattr(layer, "ntlmssp_identifier") and layer.ntlmssp_identifier == "NTLMSSP"):
@@ -80,9 +88,13 @@ def process_pcap(filename: str, must_inspect_strings=False, tshark_filter=None, 
     for packet in pcap:
         try:
             _process_packet(packet, must_inspect_strings)
-        except Exception as e:
-            logger.error("An exception occurred when trying to process {} : {}".format(repr(packet), repr(e)))
-            logger.info("Resuming analysis...")
+
+        except MalformedPacketException as e:
+            logger.error(str(e) + ", CredSLayer will keep going")
+
+        except Exception:
+            traceback.print_exc()
+            logger.error("An exception occurred but CredSLayer will keep going.")
 
     _sessions.process_sessions_remaining_content()
 
@@ -111,9 +123,13 @@ def active_processing(interface: str, must_inspect_strings=False, tshark_filter=
         for packet in live.sniff_continuously():
             try:
                 _process_packet(packet, must_inspect_strings)
-            except Exception as e:
-                logger.error("An exception occurred when trying to process {} : {}".format(repr(packet), repr(e)))
-                logger.info("Resuming analysis...")
+
+            except MalformedPacketException as e:
+                logger.error(str(e) + ", CredSLayer will keep going")
+
+            except Exception:
+                traceback.print_exc()
+                logger.error("An exception occurred but CredSLayer will keep going.")
 
     except TSharkCrashException:
         logger.error("tshark crashed :( Please report the following error :")

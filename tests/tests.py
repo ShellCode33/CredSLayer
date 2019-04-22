@@ -5,6 +5,7 @@ from pyshark import FileCapture
 
 from csl.core import extract, utils
 from csl.core.manager import process_pcap
+from csl.core.session import SessionList
 from csl.core.utils import Credentials, CreditCard
 
 
@@ -133,12 +134,32 @@ class ParsersTest(unittest.TestCase):
         print(credentials_list)
         self.assertTrue(credentials_list == [Credentials(context={'version': 'NETNTLMv2'}, hash="administrator:::26de2c0b3abaaa1c:711d6cb05614bc240ca7e2a38568ff85:0101000000000000e652e41aa7b4d401dac9a62e4db2926b000000000200060046004f004f000100100044004600530052004f004f00540031000400100066006f006f002e0074006500730074000300220064006600730072006f006f00740031002e0066006f006f002e0074006500730074000500100066006f006f002e00740065007300740007000800e652e41aa7b4d40100000000")])
 
+        credentials_list = process_pcap("samples/smb-ntlm3.pcap").get_list_of_all_credentials()
+        print(credentials_list)
+        self.assertTrue(credentials_list == [Credentials(context={'version': 'NETNTLMv1'}, hash="administrator::VNET3:42c09b264cbc466900000000000000000000000000000000:9cd7e4af2d7e934adc9b307231a958539b3d2c368b964cea:28a3a326a53fa6f5")])
+
         sessions = process_pcap("samples/http-ntlm.pcap")
         remaining_credentials = [session.credentials_being_built for session in sessions if not session.credentials_being_built.is_empty()]
 
         print(remaining_credentials)
         self.assertTrue(len(remaining_credentials) == 6)
         self.assertTrue(Credentials(hash="administrator::example:ea46e3a07ea448d200000000000000000000000000000000:4d626ea83a02eee710571a2b84241788bd21e3a66ddbf4a5:CHALLENGE_NOT_FOUND") in remaining_credentials)
+
+
+class ManagerTest(unittest.TestCase):
+
+    def setUp(self):
+        # Set the working directory to the script's directory
+        abspath = os.path.abspath(__file__)
+        directory = os.path.dirname(abspath)
+        os.chdir(directory)
+
+    def test_malformed(self):
+        from csl.core import manager
+        pcap = FileCapture("samples/smb-crash.pcap")
+        manager._sessions = SessionList()
+        self.assertRaises(manager.MalformedPacketException, manager._process_packet, pcap[8], False)
+        pcap.close()
 
 
 class ExtractTest(unittest.TestCase):
