@@ -117,16 +117,19 @@ class SessionList(list):
     def _manage(self):
         from csl.core import logger
 
+        logger.debug("Starting thread...")
+
         while True:
 
             for i in range(Session.INACTIVE_SESSION_DELAY):
                 time.sleep(1)
 
                 if not self._keep_manager_alive:
+                    self.process_sessions_remaining_content()
+                    logger.debug("Thread stopped.")
                     return
 
             logger.debug("Removing outdated sessions...")
-            self.process_sessions_remaining_content()
             self._remove_outdated_sessions()
 
     def _remove_outdated_sessions(self):
