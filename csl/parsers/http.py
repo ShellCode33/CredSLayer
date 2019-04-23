@@ -37,7 +37,7 @@ def analyse(session: Session, layer: Layer) -> bool:
         if extension in HTTP_IGNORED_EXTENSIONS:
             return False
 
-        if layer.request_full_uri.startswith("http://ocsp."):  # Ignore Certificate Status Protocol
+        if hasattr(layer, "request_full_uri") and layer.request_full_uri.startswith("http://ocsp."):  # Ignore Certificate Status Protocol
             return False
 
         if hasattr(layer, "authorization"):
