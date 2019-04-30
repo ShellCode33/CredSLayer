@@ -166,6 +166,14 @@ class ManagerTest(unittest.TestCase):
         self.assertRaises(manager.MalformedPacketException, manager._process_packet, pcap[8], False)
         pcap.close()
 
+    def test_protocol_decode_as(self):
+        from csl.core import manager
+        credentials_list = manager.process_pcap("samples/telnet-hidden.pcap",
+                                                decode_as={"tcp.port==1337": "telnet"})\
+                                  .get_list_of_all_credentials()
+        print(credentials_list)
+        self.assertTrue(Credentials("shellcode", "shellcode") in credentials_list)
+
 
 class ExtractTest(unittest.TestCase):
 
