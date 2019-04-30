@@ -6,6 +6,7 @@ from csl.core.session import Session
 
 POTENTIAL_USERNAME_ASK = ["login:", "username:", "user:", "name:"]
 POTENTIAL_AUTH_SUCCESS = ["last login", "welcome"]
+POTENTIAL_AUTH_ERROR = ["incorrect", "error"]
 
 
 def _is_username_duplicated(username):
@@ -33,14 +34,15 @@ def analyse(session: Session, layer: Layer) -> bool:
 
     current_creds = session.credentials_being_built
 
-    if session["data_being_built"] is None:
-        session["data_being_built"] = ""
-        session["user_being_built"] = session["pass_being_built"] = False
-
     # Sometimes tshark returns multiple Data fields
     data_fields = layer.data.all_fields
 
     for data in data_fields:
+
+        if session["data_being_built"] is None:
+            session["data_being_built"] = ""
+            session["user_being_built"] = session["pass_being_built"] = False
+
         try:
             data = data.binary_value.decode()
         except UnicodeDecodeError:
@@ -62,6 +64,10 @@ def analyse(session: Session, layer: Layer) -> bool:
                     if auth_success_msg in lowered_data:
                         logger.found(session, "credentials found: {} -- {}".format(current_creds.username, current_creds.password))
                         return True
+
+                for auth_error_msg in POTENTIAL_AUTH_ERROR:
+                    if auth_error_msg in lowered_data:
+                        session.invalidate_credentials_and_clear_session()
 
             else:
                 session["data_being_built"] += data
