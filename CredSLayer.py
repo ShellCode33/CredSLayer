@@ -27,7 +27,12 @@ if __name__ == "__main__":
                              'Enabled by default on pcap files, disabled on live captures.')
     parser.add_argument('-f', '--filter',
                         metavar='IP',
-                        help='only show packets involving the specified IP.')
+                        help='only show '
+                             'packets involving the specified IP.')
+    parser.add_argument('-m', '--map',
+                        action='append',
+                        metavar='PORT:PROTOCOL',
+                        help='map a port to a protocol')
     parser.add_argument('--debug', action='store_true',
                         help='put CredSLayer and pyshark in debug mode.')
 
@@ -63,6 +68,20 @@ if __name__ == "__main__":
         if args.listen:
             ip_filter = "host " + args.filter
 
+    decode_map = None
+
+    if args.map:
+        decode_map = {}
+
+        for map in args.map:
+            tokens = map.split(":")
+
+            if len(tokens) != 2:
+                parser.error("Invalid port mapping")
+
+            decode_map["tcp.port==" + tokens[0]] = tokens[1]
+            logger.info("CredSLayer will decode traffic on '{}' as '{}'".format(*tokens))
+
     if args.listen:
 
         if os.geteuid() != 0:
@@ -72,7 +91,8 @@ if __name__ == "__main__":
         manager.active_processing(args.listen,
                                   must_inspect_strings=string_inspection,
                                   tshark_filter=ip_filter,
-                                  debug=args.debug)
+                                  debug=args.debug,
+                                  decode_as=decode_map)
         exit(0)
 
     for pcap in args.pcapfiles:
@@ -81,7 +101,8 @@ if __name__ == "__main__":
             manager.process_pcap(pcap,
                                  must_inspect_strings=string_inspection,
                                  tshark_filter=ip_filter,
-                                 debug=args.debug)
+                                 debug=args.debug,
+                                 decode_as=decode_map)
 
         except Exception as e:
             error_str = str(e)

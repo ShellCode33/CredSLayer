@@ -70,14 +70,14 @@ def _process_packet(packet: Packet, must_inspect_strings):
             logger.info(session, "Credit card '{}' found: '{}'".format(credit_card.name, credit_card.number))
 
 
-def process_pcap(filename: str, must_inspect_strings=False, tshark_filter=None, debug=False) -> SessionList:
+def process_pcap(filename: str, must_inspect_strings=False, tshark_filter=None, debug=False, decode_as=None) -> SessionList:
 
     global _sessions
 
     logger.DEBUG_MODE = debug
     _sessions = SessionList()
 
-    pcap = pyshark.FileCapture(filename, display_filter=tshark_filter)
+    pcap = pyshark.FileCapture(filename, display_filter=tshark_filter, decode_as=decode_as)
     logger.info("Processing packets in '{}'".format(filename))
 
     if debug:
@@ -103,7 +103,7 @@ def process_pcap(filename: str, must_inspect_strings=False, tshark_filter=None, 
     return _sessions
 
 
-def active_processing(interface: str, must_inspect_strings=False, tshark_filter=None, debug=False):
+def active_processing(interface: str, must_inspect_strings=False, tshark_filter=None, debug=False, decode_as=None):
 
     global _sessions
 
@@ -113,7 +113,7 @@ def active_processing(interface: str, must_inspect_strings=False, tshark_filter=
     _sessions.manage_outdated_sessions()
     signal.signal(signal.SIGINT, signal_handler)
 
-    live = pyshark.LiveCapture(interface=interface, bpf_filter=tshark_filter)
+    live = pyshark.LiveCapture(interface=interface, bpf_filter=tshark_filter, decode_as=decode_as)
     logger.info("Listening on {}...".format(interface))
 
     if debug:
