@@ -7,7 +7,7 @@ CredSLayer goal is to look for credentials and other useful stuff in network cap
 
 Have you heard about [Pcredz](https://github.com/lgandx/PCredz) or [net-creds](https://github.com/DanMcInerney/net-creds) ? Well this tool pushes the boundaries even further by using Wireshark dissectors, it's therefore more accurate and reliable.
 
-This tool is really helpful if you're a pentester or if you want to scan your own network to see if anything critical is sent over.  
+This tool is really helpful if you're doing IT security or if you want to scan your own network to see if anything critical is sent over.  
 
 # Features
 
@@ -22,6 +22,8 @@ Right now, CredSLayer supports the following protocols:
 * NTLMSSP
 
 It is also able to look for email addresses and credit card numbers.
+
+**Note:** To prevent false positives and performance issues, tshark (the Wireshark underlying engine) uses ports to know which dissector to use on which packets. A few protocols however have heuristic analysis to guess the protocol on different ports than the usual ones (such as HTTP). To address this issue, CredSLayer has a `--map` parameter, it enables you to map a (range of) port(s) to a specific protocol. This way you will be able to sniff credentials going to a specific service on a specific port you are aware of.  
 
 # Install
 
@@ -41,9 +43,9 @@ pip package coming soon...
 # Usage
 
 ```
-$ python CredSLayer.py -h                                  
+$ python CredSLayer.py -h
 usage: CredSLayer.py [-h] [-l INTERFACE] [-s {enable,disable}] [-f IP]
-                     [--debug]
+                     [-m PORT:PROTOCOL] [--debug]
                      [pcapfiles [pcapfiles ...]]
 
 Helps you find credentials and other interesting stuff in network captures
@@ -61,6 +63,8 @@ optional arguments:
                         network captures. Pretty heavy on the CPU. Enabled by
                         default on pcap files, disabled on live captures.
   -f IP, --filter IP    only show packets involving the specified IP.
+  -m PORT:PROTOCOL, --map PORT:PROTOCOL
+                        map a port to a protocol
   --debug               put CredSLayer and pyshark in debug mode.
 ```
 
