@@ -20,6 +20,12 @@ if __name__ == "__main__":
     parser.add_argument('-l', '--listen',
                         help='start active processing on specified interface',
                         metavar='INTERFACE')
+    parser.add_argument('-lo', '--listen-output',
+                        help='output captured packets to a pcap file',
+                        metavar='FILE')
+    parser.add_argument('-o', '--output',
+                        help='output captured credentials to a file',
+                        metavar='FILE')
     parser.add_argument('-s', '--string-inspection',
                         choices=["enable", "disable"],
                         help='let you specify if you want to look for interesting strings (email addresses, '
@@ -39,8 +45,16 @@ if __name__ == "__main__":
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
 
-    if not args.listen and not args.pcapfiles:
-        parser.error("Nothing to do...")
+    if args.listen:
+        if args.pcapfiles:
+            parser.error("You cannot specify pcap files to analyse and listen at the same time")
+
+    else:
+        if not args.pcapfiles:
+            parser.error("Nothing to do...")
+
+        if args.listen_output:
+            parser.error("Cannot specify --listen-output/-lo if not in listening mode")
 
     string_inspection = None
 
@@ -82,17 +96,28 @@ if __name__ == "__main__":
             decode_map["tcp.port==" + tokens[0]] = tokens[1]
             logger.info("CredSLayer will decode traffic on '{}' as '{}'".format(*tokens))
 
+    if args.output:
+
+        if os.path.isfile(args.output):
+            parser.error(args.output + " already exists")
+
+        logger.OUTPUT_FILE = open(args.output, "w")
+
     if args.listen:
 
         if os.geteuid() != 0:
             print("You must be root to listen on an interface.")
             exit(1)
 
+        if args.listen_output and os.path.isfile(args.listen_output):
+            parser.error(args.listen_output + " already exists")
+
         manager.active_processing(args.listen,
                                   must_inspect_strings=string_inspection,
                                   tshark_filter=ip_filter,
                                   debug=args.debug,
-                                  decode_as=decode_map)
+                                  decode_as=decode_map,
+                                  pcap_output=args.listen_output)
         exit(0)
 
     for pcap in args.pcapfiles:
@@ -114,3 +139,6 @@ if __name__ == "__main__":
 
             else:
                 traceback.print_exc()
+
+    if logger.OUTPUT_FILE:
+        logger.OUTPUT_FILE.close()

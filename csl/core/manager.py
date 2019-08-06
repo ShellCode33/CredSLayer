@@ -23,6 +23,9 @@ def signal_handler(sig, frame):
     if _sessions is not None:
         _sessions.__del__()
 
+    if logger.OUTPUT_FILE:
+        logger.OUTPUT_FILE.close()
+
     print('Bye !')
 
 
@@ -103,7 +106,7 @@ def process_pcap(filename: str, must_inspect_strings=False, tshark_filter=None, 
     return _sessions
 
 
-def active_processing(interface: str, must_inspect_strings=False, tshark_filter=None, debug=False, decode_as=None):
+def active_processing(interface: str, must_inspect_strings=False, tshark_filter=None, debug=False, decode_as=None, pcap_output=None):
 
     global _sessions
 
@@ -113,7 +116,7 @@ def active_processing(interface: str, must_inspect_strings=False, tshark_filter=
     _sessions.manage_outdated_sessions()
     signal.signal(signal.SIGINT, signal_handler)
 
-    live = pyshark.LiveCapture(interface=interface, bpf_filter=tshark_filter, decode_as=decode_as)
+    live = pyshark.LiveCapture(interface=interface, bpf_filter=tshark_filter, decode_as=decode_as, output_file=pcap_output)
     logger.info("Listening on {}...".format(interface))
 
     if debug:

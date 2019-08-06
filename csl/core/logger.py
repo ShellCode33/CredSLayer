@@ -13,6 +13,14 @@ class Color(object):
 
 
 DEBUG_MODE = False
+OUTPUT_FILE = None
+
+
+def _log(content):
+    print(content)
+
+    if OUTPUT_FILE:
+        OUTPUT_FILE.write(content + "\n")
 
 
 def debug(*args):
@@ -22,25 +30,25 @@ def debug(*args):
     if len(args) == 2:
         session = args[0]
         msg = args[1]
-        print("{}[{} {}] {}{}[DEBUG]{} {}".format(Color.BRIGHT_BLUE, session.protocol, str(session), Color.RESET, Color.CYAN, Color.RESET, msg))
+        _log("{}[{} {}] {}{}[DEBUG]{} {}".format(Color.BRIGHT_BLUE, session.protocol, str(session), Color.RESET, Color.CYAN, Color.RESET, msg))
     else:
         msg = args[0]
-        print("{}[DEBUG]{} {}".format(Color.CYAN, Color.RESET, msg))
+        _log("{}[DEBUG]{} {}".format(Color.CYAN, Color.RESET, msg))
 
 
 def info(*args):
     if len(args) == 2:
         session = args[0]
         msg = args[1]
-        print("{}[{} {}] {}{}[INFO]{}  {}".format(Color.BRIGHT_BLUE, session.protocol, str(session), Color.RESET, Color.GREEN, Color.RESET, msg))
+        _log("{}[{} {}] {}{}[INFO]{}  {}".format(Color.BRIGHT_BLUE, session.protocol, str(session), Color.RESET, Color.GREEN, Color.RESET, msg))
     else:
         msg = args[0]
-        print("{}[INFO]{} {}".format(Color.GREEN, Color.RESET, msg))
+        _log("{}[INFO]{} {}".format(Color.GREEN, Color.RESET, msg))
 
 
 def error(msg: str):
-    print("{}[ERROR]{} {}".format(Color.RED, Color.RESET, msg))
+    _log("{}[ERROR]{} {}".format(Color.RED, Color.RESET, msg))
 
 
 def found(session: Session, msg: str):
-    print("{}[{} {}] {}{}{}[FOUND]{} {}".format(Color.BRIGHT_BLUE, session.protocol, str(session), Color.RESET, Color.WHITE, Color.BACKGROUND_RED, Color.RESET, msg))
+    _log("{}[{} {}] {}{}{}[FOUND]{} {}".format(Color.BRIGHT_BLUE, session.protocol, str(session), Color.RESET, Color.WHITE, Color.BACKGROUND_RED, Color.RESET, msg))
