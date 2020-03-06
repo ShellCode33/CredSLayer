@@ -2,6 +2,7 @@
 
 ![alt python_version](https://img.shields.io/badge/python-3.5+-informational.svg)
 ![alt tests_coverage](https://img.shields.io/badge/tests%20coverage-94%25-success.svg)
+[![Build Status](https://travis-ci.com/ShellCode33/CredSLayer.svg?branch=master)](https://travis-ci.com/ShellCode33/CredSLayer)
 
 CredSLayer goal is to look for credentials and other useful stuff in network captures. Two modes are available, pcap scanning and active processing. The latest listens for packets on a chosen interface and dynamically extracts everything it can.
 
@@ -28,24 +29,21 @@ It is also able to look for email addresses and credit card numbers.
 
 # Install
 
-You need Wireshark installed and Python >= 3.5, then do the following :
+You need `tshark` installed and Python >= 3.5. On some distribution tshark in shipped within the `wireshark` package. 
+
+Then simply install using :
 
 ```
-$ git clone https://github.com/ShellCode33/CredSLayer.git
-$ cd CredSLayer/
-$ python3 -m venv venv
-$ . venv/bin/activate
-$ pip install -r requirements.txt
-$ python CredSLayer.py -h
+$ pip install credslayer
 ```
 
-pip package coming soon...
+I recommend you use a [virtualenv](https://docs.python.org/3/library/venv.html) to prevent conflicts.
 
 # Usage
 
 ```
-$ python CredSLayer.py -h
-usage: CredSLayer.py [-h] [-l INTERFACE] [-s {enable,disable}] [-f IP]
+$ credslayer -h
+usage: credslayer [-h] [-l INTERFACE] [-s {enable,disable}] [-f IP]
                      [-m PORT:PROTOCOL] [--debug]
                      [pcapfiles [pcapfiles ...]]
 
