@@ -15,9 +15,6 @@ python:
 
 script: python -m unittest tests/tests.py
 
-virtualenv:
-  system_site_packages: true
-
 deploy:
   - provider: releases
     file_glob: true
