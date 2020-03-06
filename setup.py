@@ -11,6 +11,7 @@ setup(
     version='0.1',
     description='Extract credentials and other useful info from network captures',
     long_description=long_description,
+    long_description_content_type='text/markdown',
     keywords="credentials security networking extraction mining wireshark tshark dissector password",
     author='ShellCode',
     author_email='shellcode33@protonmail.ch',
