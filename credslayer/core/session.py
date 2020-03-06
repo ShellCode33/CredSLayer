@@ -6,7 +6,7 @@ from typing import List
 
 from pyshark.packet.packet import Packet
 
-from csl.core.utils import Credentials
+from credslayer.core.utils import Credentials
 
 
 class Session(dict):
@@ -115,7 +115,7 @@ class SessionList(list):
         self._thread.start()
 
     def _manage(self):
-        from csl.core import logger
+        from credslayer.core import logger
 
         logger.debug("Starting thread...")
 
@@ -140,7 +140,7 @@ class SessionList(list):
 
     def process_sessions_remaining_content(self) -> List[Credentials]:
 
-        from csl.core import logger
+        from credslayer.core import logger
         remaining = [session for session in self if not session.credentials_being_built.is_empty()]
 
         if len(remaining) > 0:

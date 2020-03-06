@@ -3,8 +3,8 @@ import base64
 
 from pyshark.packet.layer import Layer
 
-from csl.core import logger
-from csl.core.session import Session
+from credslayer.core import logger
+from credslayer.core.session import Session
 
 
 def _fix_tshark_widechar_issue(layer) -> (str, str):

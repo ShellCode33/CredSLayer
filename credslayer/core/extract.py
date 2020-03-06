@@ -3,7 +3,7 @@
 import re
 from typing import Set, List
 
-from csl.core.utils import CreditCard
+from credslayer.core.utils import CreditCard
 
 # This regex has been made in order to prevent false positives, theoretically it can miss a few addresses.
 email_regex = re.compile(r'(?:\t| |^|<|,|:)([^+\x00-\x20@<>/\\{}`^\'*:;=()%\[\],_\-"]'

@@ -7,9 +7,9 @@ import pyshark
 from pyshark.capture.capture import TSharkCrashException
 from pyshark.packet.packet import Packet
 
-from csl.core import logger, extract, utils
-from csl.core.session import SessionList
-from csl.parsers import parsers, ntlmssp
+from credslayer.core import logger, extract, utils
+from credslayer.core.session import SessionList
+from credslayer.parsers import parsers, ntlmssp
 
 _sessions = None
 

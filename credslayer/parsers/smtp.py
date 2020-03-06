@@ -4,8 +4,8 @@ from base64 import b64decode
 
 from pyshark.packet.layer import Layer
 
-from csl.core import utils, logger
-from csl.core.session import Session
+from credslayer.core import utils, logger
+from credslayer.core.session import Session
 
 
 def analyse(session: Session, layer: Layer) -> bool:

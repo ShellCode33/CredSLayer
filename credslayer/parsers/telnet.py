@@ -1,8 +1,8 @@
 # coding: utf-8
 from pyshark.packet.layer import Layer
 
-from csl.core import logger
-from csl.core.session import Session
+from credslayer.core import logger
+from credslayer.core.session import Session
 
 POTENTIAL_USERNAME_ASK = ["login:", "username:", "user:", "name:"]
 POTENTIAL_AUTH_SUCCESS = ["last login", "welcome"]

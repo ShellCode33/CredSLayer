@@ -1,5 +1,5 @@
 # coding: utf-8
-from csl.core.session import Session
+from credslayer.core.session import Session
 
 
 class Color(object):

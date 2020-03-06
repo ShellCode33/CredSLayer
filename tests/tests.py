@@ -3,10 +3,10 @@ import unittest
 
 from pyshark import FileCapture
 
-from csl.core import extract, utils
-from csl.core.manager import process_pcap
-from csl.core.session import SessionList
-from csl.core.utils import Credentials, CreditCard
+from credslayer.core import extract, utils
+from credslayer.core.manager import process_pcap
+from credslayer.core.session import SessionList
+from credslayer.core.utils import Credentials, CreditCard
 
 
 class ParsersTest(unittest.TestCase):
@@ -160,14 +160,14 @@ class ManagerTest(unittest.TestCase):
         os.chdir(directory)
 
     def test_malformed(self):
-        from csl.core import manager
+        from credslayer.core import manager
         pcap = FileCapture("samples/smb-crash.pcap")
         manager._sessions = SessionList()
         self.assertRaises(manager.MalformedPacketException, manager._process_packet, pcap[8], False)
         pcap.close()
 
     def test_protocol_decode_as(self):
-        from csl.core import manager
+        from credslayer.core import manager
         credentials_list = manager.process_pcap("samples/telnet-hidden.pcap",
                                                 decode_as={"tcp.port==1337": "telnet"})\
                                   .get_list_of_all_credentials()
@@ -257,7 +257,7 @@ class SessionsTest(unittest.TestCase):
         os.chdir(directory)
 
     def test_sessions_extract(self):
-        from csl.core.session import SessionList
+        from credslayer.core.session import SessionList
 
         sessions = SessionList()
 

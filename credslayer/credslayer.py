@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 # coding: utf-8
+
 import socket
 
 import argparse
@@ -8,9 +9,10 @@ import traceback
 
 import argcomplete
 
-from csl.core import manager, logger
+from credslayer.core import manager, logger
 
-if __name__ == "__main__":
+
+def main():
 
     parser = argparse.ArgumentParser(
         description='Helps you find credentials and other interesting stuff in network captures')
@@ -142,3 +144,7 @@ if __name__ == "__main__":
 
     if logger.OUTPUT_FILE:
         logger.OUTPUT_FILE.close()
+
+
+if __name__ == "__main__":
+    main()

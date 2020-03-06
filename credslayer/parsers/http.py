@@ -5,9 +5,9 @@ from urllib.parse import parse_qs
 
 from pyshark.packet.layer import Layer
 
-from csl.core import logger
-from csl.core.session import Session
-from csl.core.utils import Credentials
+from credslayer.core import logger
+from credslayer.core.session import Session
+from credslayer.core.utils import Credentials
 
 HTTP_IGNORED_EXTENSIONS = ["css", "ico", "png", "jpg", "jpeg", "gif", "js"]
 HTTP_METHODS = ["OPTIONS", "GET", "HEAD", "POST", "PUT", "DELETE", "TRACE", "CONNECT"]
