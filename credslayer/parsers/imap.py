@@ -18,10 +18,11 @@ def analyse(session: Session, layer: Layer) -> bool:
             current_creds.username = tokens[1]
             current_creds.password = tokens[3]
 
-    elif hasattr(layer, "response_command"):
-        command = layer.response_command
+    # Due to an incompatibility with "old" tshark versions, we cannot use response_command :(
+    elif hasattr(layer, "response"):
+        command = layer.response
 
-        if command == "LOGIN":
+        if " LOGIN " in command:
             status = layer.response_status
 
             if status == "OK":
