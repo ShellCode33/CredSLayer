@@ -2,11 +2,9 @@
 # coding: utf-8
 
 import socket
-
-import argparse
 import os
 import traceback
-
+import argparse
 import argcomplete
 
 from credslayer.core import manager, logger
@@ -35,8 +33,7 @@ def main():
                              'Enabled by default on pcap files, disabled on live captures.')
     parser.add_argument('-f', '--filter',
                         metavar='IP',
-                        help='only show '
-                             'packets involving the specified IP.')
+                        help='process packets involving the specified IP.')
     parser.add_argument('-m', '--map',
                         action='append',
                         metavar='PORT:PROTOCOL',
@@ -89,8 +86,8 @@ def main():
     if args.map:
         decode_map = {}
 
-        for map in args.map:
-            tokens = map.split(":")
+        for m in args.map:
+            tokens = m.split(":")
 
             if len(tokens) != 2:
                 parser.error("Invalid port mapping")

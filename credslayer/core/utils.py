@@ -1,9 +1,11 @@
 # coding: utf-8
+
 import base64
 import re
 from collections import namedtuple
+
 from string import printable as printable_charset
-from typing import List
+from typing import List, Tuple
 
 from pyshark.packet.packet import Packet
 
@@ -26,8 +28,8 @@ class Credentials(object):
                 return False
 
         return self.username == other.username \
-               and self.password == other.password \
-               and self.hash == other.hash
+            and self.password == other.password \
+            and self.hash == other.hash
 
     def __repr__(self):
         string = ""
@@ -87,12 +89,12 @@ def extract_strings_splitted_on_end_of_line_from(packet: Packet) -> List[str]:
 
     strings = extract_strings_from(packet)
     strings = "".join(strings)
-    return re.split("[\r\n\x00]+", strings)
+    return re.split(r"[\r\n\x00]+", strings)
 
 
 # https://tools.ietf.org/html/rfc4616
-def parse_sasl_creds(base64_encoded, type) -> (str, str):
-    if type == "PLAIN":
+def parse_sasl_creds(base64_encoded, sasl_type) -> Tuple[str, str]:
+    if sasl_type == "PLAIN":
         auth_content = base64.b64decode(base64_encoded)
         auth_content = auth_content.split(b"\x00")
         username = auth_content[1].decode()
@@ -100,4 +102,4 @@ def parse_sasl_creds(base64_encoded, type) -> (str, str):
         return username, password
 
     else:
-        raise Exception("SASL auth type not supported: " + type)
+        raise Exception("SASL auth type not supported: " + sasl_type)

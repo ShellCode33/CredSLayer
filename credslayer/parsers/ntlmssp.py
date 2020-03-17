@@ -1,5 +1,7 @@
 # coding: utf-8
+
 import base64
+from typing import Tuple
 
 from pyshark.packet.layer import Layer
 
@@ -7,7 +9,7 @@ from credslayer.core import logger
 from credslayer.core.session import Session
 
 
-def _fix_tshark_widechar_issue(layer) -> (str, str):
+def _fix_tshark_widechar_issue(layer) -> Tuple[str, str]:
     if hasattr(layer, "authorization") and layer.authorization.startswith("NTLM "):  # HTTP header dirty fix
         ntlm_bytes = base64.b64decode(layer.authorization[5:])
         username_offset = int(layer.ntlmssp_string_offset.all_fields[1].show)

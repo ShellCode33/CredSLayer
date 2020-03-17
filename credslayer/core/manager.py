@@ -18,18 +18,20 @@ class MalformedPacketException(Exception):
     pass
 
 
-def signal_handler(sig, frame):
-
+def clean_before_exit():
     if _sessions is not None:
         _sessions.__del__()
 
     if logger.OUTPUT_FILE:
         logger.OUTPUT_FILE.close()
 
+
+def signal_handler(sig, frame):
+    clean_before_exit()
     print('Bye !')
 
 
-def _process_packet(packet: Packet, must_inspect_strings):
+def _process_packet(packet: Packet, must_inspect_strings: bool):
 
     # We only support tcp & udp packets for now
     if "tcp" not in packet and "udp" not in packet:
@@ -137,4 +139,4 @@ def active_processing(interface: str, must_inspect_strings=False, tshark_filter=
     except TSharkCrashException:
         logger.error("tshark crashed :( Please report the following error :")
         traceback.print_exc()
-        signal_handler(None, None)
+        clean_before_exit()

@@ -9,7 +9,7 @@ POTENTIAL_AUTH_SUCCESS = ["last login", "welcome"]
 POTENTIAL_AUTH_ERROR = ["incorrect", "error"]
 
 
-def _is_username_duplicated(username):
+def _is_username_duplicated(username: str) -> bool:
     """
     Detects if the username has been duplicated because of telnet's echo mode.
     Duplicated username example : aaddmmiinn
