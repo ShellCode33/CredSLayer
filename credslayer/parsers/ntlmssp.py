@@ -30,7 +30,7 @@ def _fix_tshark_widechar_issue(layer) -> Tuple[str, str]:
 
 # Great resource : http://davenport.sourceforge.net/ntlm.html#theNtlmv2Response
 
-def analyse(session: Session, layer: Layer, ) -> bool:
+def analyse(session: Session, layer: Layer):
 
     current_creds = session.credentials_being_built
 
@@ -39,7 +39,8 @@ def analyse(session: Session, layer: Layer, ) -> bool:
 
         if status == 0:  # LOGON SUCCESS
             logger.found(session, "{} found: {}".format(current_creds.context["version"], current_creds.hash))
-            return True
+            session.validate_credentials()
+
         elif status == 3221225581:  # LOGON FAILED
             session.invalidate_credentials_and_clear_session()
 
@@ -80,5 +81,3 @@ def analyse(session: Session, layer: Layer, ) -> bool:
 
             else:  # Unsupported NTLM format, investigate ? Found a pcap w/o ntlm client challenge field
                 session.invalidate_credentials_and_clear_session()
-
-    return False
