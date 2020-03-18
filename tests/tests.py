@@ -1,3 +1,5 @@
+# coding: utf-8
+
 import os
 import unittest
 
@@ -5,7 +7,7 @@ from pyshark import FileCapture
 
 from credslayer.core import extract, utils
 from credslayer.core.manager import process_pcap
-from credslayer.core.session import SessionList
+from credslayer.core.session import Session
 from credslayer.core.utils import Credentials, CreditCard
 
 
@@ -108,21 +110,25 @@ class ParsersTest(unittest.TestCase):
     def test_mysql(self):
         credentials_list = process_pcap("samples/mysql.pcap").get_list_of_all_credentials()
         print(credentials_list)
-        self.assertTrue(Credentials("tfoerste", hash="eefd6d5562851bc5966a0b41236ae3f2315efcc4", context={"salt": ">~$4uth,", "salt2": ">612IWZ>fhWX"})
-                        in credentials_list)
+        self.assertTrue(Credentials("tfoerste", hash="eefd6d5562851bc5966a0b41236ae3f2315efcc4",
+                                    context={"salt": ">~$4uth,", "salt2": ">612IWZ>fhWX"}) in credentials_list)
         self.assertTrue(len(credentials_list) == 1)
 
         credentials_list = process_pcap("samples/mysql2.pcap").get_list_of_all_credentials()
         print(credentials_list)
-        self.assertTrue(Credentials("user10", hash="55ee72f0c6694cbb3a104eb97f8ee32a6a91f8b1", context={"salt": "]E!r<uX8", "salt2": "Of2c!tIM)\"n'"})
-                        in credentials_list)
+        self.assertTrue(Credentials("user10", hash="55ee72f0c6694cbb3a104eb97f8ee32a6a91f8b1",
+                                    context={"salt": "]E!r<uX8", "salt2": "Of2c!tIM)\"n'"}) in credentials_list)
         self.assertTrue(len(credentials_list) == 1)
 
     def test_pgsql(self):
         credentials_list = process_pcap("samples/pgsql.pcap").get_list_of_all_credentials()
         print(credentials_list)
-        self.assertTrue(Credentials("oryx", hash="ceffc01dcde7541829deef6b5e9c9142", context={"salt": "ad44ff54", "auth_type": "md5", "database": "mailstore"}) in credentials_list)
-        self.assertTrue(Credentials("oryx", hash="f8f8b884b4ef7cc9ee95e69868cdfa5e", context={"salt": "f211a3ed", "auth_type": "md5", "database": "mailstore"}) in credentials_list)
+        self.assertTrue(Credentials("oryx", hash="ceffc01dcde7541829deef6b5e9c9142",
+                                    context={"salt": "ad44ff54", "auth_type": "md5", "database": "mailstore"})
+                        in credentials_list)
+        self.assertTrue(Credentials("oryx", hash="f8f8b884b4ef7cc9ee95e69868cdfa5e",
+                                    context={"salt": "f211a3ed", "auth_type": "md5", "database": "mailstore"})
+                        in credentials_list)
         self.assertTrue(len(credentials_list) == 2)
 
         credentials_list = process_pcap("samples/pgsql-nopassword.pcap").get_list_of_all_credentials()
@@ -133,22 +139,48 @@ class ParsersTest(unittest.TestCase):
     def test_ntlmssp(self):
         credentials_list = process_pcap("samples/smb-ntlm.pcap").get_list_of_all_credentials()
         print(credentials_list)
-        self.assertTrue(credentials_list == [Credentials(context={'version': 'NETNTLMv2'}, hash="Willi Wireshark::DESKTOP-2AEFM7G:78f8f6206e882559:8149b0b2a73a191141bda07d1ed18434:01010000000000000bd7d7878527d201146f94347775321c0000000002001e004400450053004b0054004f0050002d00560031004600410030005500510001001e004400450053004b0054004f0050002d00560031004600410030005500510004001e004400450053004b0054004f0050002d00560031004600410030005500510003001e004400450053004b0054004f0050002d005600310046004100300055005100070008000bd7d7878527d20106000400020000000800300030000000000000000100000000200000ad865b6d08a95d0e76a94e2ca013ab3f69c4fd945cca01b277700fd2b305ca010a001000000000000000000000000000000000000900280063006900660073002f003100390032002e003100360038002e003100390039002e00310033003300000000000000000000000000")])
+        self.assertTrue(credentials_list == [Credentials(context={'version': 'NETNTLMv2'},
+                                                         hash="Willi Wireshark::DESKTOP-2AEFM7G:78f8f6206e882559:8149b0"
+                                                              "b2a73a191141bda07d1ed18434:01010000000000000bd7d7878527d"
+                                                              "201146f94347775321c0000000002001e004400450053004b0054004"
+                                                              "f0050002d00560031004600410030005500510001001e00440045005"
+                                                              "3004b0054004f0050002d00560031004600410030005500510004001"
+                                                              "e004400450053004b0054004f0050002d00560031004600410030005"
+                                                              "500510003001e004400450053004b0054004f0050002d00560031004"
+                                                              "6004100300055005100070008000bd7d7878527d2010600040002000"
+                                                              "0000800300030000000000000000100000000200000ad865b6d08a95"
+                                                              "d0e76a94e2ca013ab3f69c4fd945cca01b277700fd2b305ca010a001"
+                                                              "00000000000000000000000000000000000090028006300690066007"
+                                                              "3002f003100390032002e003100360038002e003100390039002e003"
+                                                              "10033003300000000000000000000000000")])
 
         credentials_list = process_pcap("samples/smb-ntlm2.pcap").get_list_of_all_credentials()
         print(credentials_list)
-        self.assertTrue(credentials_list == [Credentials(context={'version': 'NETNTLMv2'}, hash="administrator:::26de2c0b3abaaa1c:711d6cb05614bc240ca7e2a38568ff85:0101000000000000e652e41aa7b4d401dac9a62e4db2926b000000000200060046004f004f000100100044004600530052004f004f00540031000400100066006f006f002e0074006500730074000300220064006600730072006f006f00740031002e0066006f006f002e0074006500730074000500100066006f006f002e00740065007300740007000800e652e41aa7b4d40100000000")])
+        self.assertTrue(credentials_list == [Credentials(context={'version': 'NETNTLMv2'},
+                                                         hash="administrator:::26de2c0b3abaaa1c:711d6cb05614bc240ca7e2a"
+                                                              "38568ff85:0101000000000000e652e41aa7b4d401dac9a62e4db292"
+                                                              "6b000000000200060046004f004f000100100044004600530052004f"
+                                                              "004f00540031000400100066006f006f002e00740065007300740003"
+                                                              "00220064006600730072006f006f00740031002e0066006f006f002e"
+                                                              "0074006500730074000500100066006f006f002e0074006500730074"
+                                                              "0007000800e652e41aa7b4d40100000000")])
 
         credentials_list = process_pcap("samples/smb-ntlm3.pcap").get_list_of_all_credentials()
         print(credentials_list)
-        self.assertTrue(credentials_list == [Credentials(context={'version': 'NETNTLMv1'}, hash="administrator::VNET3:42c09b264cbc466900000000000000000000000000000000:9cd7e4af2d7e934adc9b307231a958539b3d2c368b964cea:28a3a326a53fa6f5")])
+        self.assertTrue(credentials_list == [Credentials(context={'version': 'NETNTLMv1'},
+                                                         hash="administrator::VNET3:42c09b264cbc46690000000000000000000"
+                                                              "0000000000000:9cd7e4af2d7e934adc9b307231a958539b3d2c368b"
+                                                              "964cea:28a3a326a53fa6f5")])
 
         sessions = process_pcap("samples/http-ntlm.pcap")
-        remaining_credentials = [session.credentials_being_built for session in sessions if not session.credentials_being_built.is_empty()]
+        remaining_credentials = [session.credentials_being_built
+                                 for session in sessions if session.credentials_being_built]
 
         print(remaining_credentials)
         self.assertTrue(len(remaining_credentials) == 6)
-        self.assertTrue(Credentials(hash="administrator::example:ea46e3a07ea448d200000000000000000000000000000000:4d626ea83a02eee710571a2b84241788bd21e3a66ddbf4a5:CHALLENGE_NOT_FOUND") in remaining_credentials)
+        self.assertTrue(Credentials(hash="administrator::example:ea46e3a07ea448d200000000000000000000000000000000:"
+                                         "4d626ea83a02eee710571a2b84241788bd21e3a66ddbf4a5"
+                                         ":CHALLENGE_NOT_FOUND") in remaining_credentials)
 
 
 class ManagerTest(unittest.TestCase):
@@ -162,8 +194,7 @@ class ManagerTest(unittest.TestCase):
     def test_malformed(self):
         from credslayer.core import manager
         pcap = FileCapture("samples/smb-crash.pcap")
-        manager._sessions = SessionList()
-        self.assertRaises(manager.MalformedPacketException, manager._process_packet, pcap[8], False)
+        self.assertRaises(manager.MalformedPacketException, manager._process_packet, Session(pcap[8]), pcap[8], False)
         pcap.close()
 
     def test_protocol_decode_as(self):
@@ -257,9 +288,9 @@ class SessionsTest(unittest.TestCase):
         os.chdir(directory)
 
     def test_sessions_extract(self):
-        from credslayer.core.session import SessionList
+        from credslayer.core.session import SessionsManager
 
-        sessions = SessionList()
+        sessions = SessionsManager()
 
         pcap = FileCapture("samples/ftp.pcap")
 
