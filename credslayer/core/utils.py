@@ -48,8 +48,10 @@ class Credentials(object):
 
         return string[:-4]
 
-    def is_empty(self):
-        return self.username is None and self.password is None and self.hash is None
+    def __bool__(self):
+        return self.username is not None \
+               or self.password is not None \
+               or self.hash is not None
 
 
 def extract_strings_from(packet: Packet) -> List[str]:

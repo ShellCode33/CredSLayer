@@ -34,7 +34,7 @@ def analyse(session: Session, layer: Layer):
 
     current_creds = session.credentials_being_built
 
-    if not current_creds.is_empty() and hasattr(layer, "nt_status"):
+    if current_creds and hasattr(layer, "nt_status"):
         status = int(layer.nt_status)
 
         if status == 0:  # LOGON SUCCESS

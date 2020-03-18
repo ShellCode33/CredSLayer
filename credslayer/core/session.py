@@ -2,12 +2,29 @@
 
 import time
 from threading import Thread
-from typing import List
+from typing import List, Tuple
 
 from pyshark.packet.packet import Packet
 
-from credslayer.core import logger
 from credslayer.core.utils import Credentials
+
+
+_keep_threads_alive = True
+_running_threads = []  # type: List[Thread]
+
+
+def stop_managed_sessions():
+    global _keep_threads_alive
+    _keep_threads_alive = False
+
+    for thread in _running_threads:
+        thread.join()
+
+    _running_threads.clear()
+
+
+class SessionException(Exception):
+    pass
 
 
 class Session(dict):
@@ -24,7 +41,7 @@ class Session(dict):
             ip_type = "ip"
             proto_id = int(getattr(packet, ip_type).proto)
         else:
-            raise Exception("IP layer not found")
+            raise SessionException("IP layer not found")
 
         if proto_id == 6:
             self.protocol = "tcp"
@@ -36,7 +53,7 @@ class Session(dict):
             src = packet[ip_type].src
             dst = packet[ip_type].dst
         else:
-            raise Exception("Unsupported protocol id: " + str(proto_id))
+            raise SessionException("Unsupported protocol id: " + str(proto_id))
 
         if packet[self.protocol].srcport == packet[self.protocol].dstport:
             # Alphabetic ordering on IP addresses if ports are the same
@@ -54,7 +71,7 @@ class Session(dict):
         self._session_identifier = "{} {}".format(self.protocol.upper(), self._session_string_representation)
         self._last_seen_time = time.time()
         self.credentials_being_built = Credentials()
-        self.credentials_list = []
+        self.credentials_list = []  # type: List[Credentials]
 
     def __eq__(self, other):
         if isinstance(other, Session):
@@ -89,17 +106,15 @@ class Session(dict):
         return time.time() - self._last_seen_time > Session.INACTIVE_SESSION_DELAY
 
 
-class SessionList(list):
+class SessionsManager(List[Session]):
 
-    def __init__(self):
+    def __init__(self, remove_outdated=False):
         super().__init__()
-        self._thread = Thread(target=self._manage)
-        self._keep_manager_alive = True
 
-    def __del__(self):
-        if self._thread.is_alive():
-            self._keep_manager_alive = False
-            self._thread.join()
+        if remove_outdated:
+            thread = Thread(target=self._manage)
+            _running_threads.append(thread)
+            thread.start()
 
     def get_session_of(self, packet: Packet) -> Session:
         session = Session(packet)
@@ -112,23 +127,16 @@ class SessionList(list):
 
         return session
 
-    def manage_outdated_sessions(self):
-        self._thread.start()
-
     def _manage(self):
-        logger.debug("Starting thread...")
 
         while True:
 
             for i in range(Session.INACTIVE_SESSION_DELAY):
                 time.sleep(1)
 
-                if not self._keep_manager_alive:
-                    self.process_sessions_remaining_content()
-                    logger.debug("Thread stopped.")
+                if not _keep_threads_alive:
                     return
 
-            logger.debug("Removing outdated sessions...")
             self._remove_outdated_sessions()
 
     def _remove_outdated_sessions(self):
@@ -137,19 +145,10 @@ class SessionList(list):
         for session in sessions_to_remove:
             self.remove(session)
 
-    def process_sessions_remaining_content(self) -> List[Credentials]:
-        remaining = [session for session in self if not session.credentials_being_built.is_empty()]
+    def get_remaining_content(self) -> List[Tuple[Session, Credentials]]:
+        return [(session, session.credentials_being_built) for session in self if session.credentials_being_built]
 
-        if remaining:
-            logger.info("Interesting things have been found but the tool weren't able validate them: ")
-            # List things that haven't been reported (sometimes the success indicator has
-            # not been captured and credentials stay in the session without being logged)
-            for session in remaining:
-                logger.info(session, str(session.credentials_being_built))
-
-        return remaining
-
-    def get_list_of_all_credentials(self):
+    def get_list_of_all_credentials(self) -> List[Credentials]:
         all_credentials = []
 
         for session in self:
