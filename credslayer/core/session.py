@@ -81,7 +81,7 @@ class Session(dict):
         else:
             raise ValueError("Can't compare session with something else than a session or a string")
 
-    def __str__(self):
+    def __repr__(self):
         return self._session_string_representation
 
     def __setitem__(self, name, value):
@@ -155,6 +155,3 @@ class SessionsManager(List[Session]):
             all_credentials += session.credentials_list
 
         return all_credentials
-
-    def __str__(self):
-        return str([str(session) for session in self])
