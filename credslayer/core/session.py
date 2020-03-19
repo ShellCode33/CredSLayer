@@ -1,7 +1,7 @@
 # coding: utf-8
 
 import time
-from threading import Thread
+from threading import Thread, Lock
 from typing import List, Tuple
 
 from pyshark.packet.packet import Packet
@@ -9,13 +9,13 @@ from pyshark.packet.packet import Packet
 from credslayer.core.utils import Credentials
 
 
-_keep_threads_alive = True
 _running_threads = []  # type: List[Thread]
+_keep_threads_alive_lock = Lock()
+_keep_threads_alive_lock.acquire()  # Thread will stay alive as long as the lock is acquired
 
 
 def stop_managed_sessions():
-    global _keep_threads_alive
-    _keep_threads_alive = False
+    _keep_threads_alive_lock.release()
 
     for thread in _running_threads:
         thread.join()
@@ -128,15 +128,7 @@ class SessionsManager(List[Session]):
         return session
 
     def _manage(self):
-
-        while True:
-
-            for i in range(Session.INACTIVE_SESSION_DELAY):
-                time.sleep(1)
-
-                if not _keep_threads_alive:
-                    return
-
+        while not _keep_threads_alive_lock.acquire(timeout=Session.INACTIVE_SESSION_DELAY):
             self._remove_outdated_sessions()
 
     def _remove_outdated_sessions(self):
