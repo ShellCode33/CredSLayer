@@ -172,11 +172,11 @@ class ParsersTest(unittest.TestCase):
                                                               "0000000000000:9cd7e4af2d7e934adc9b307231a958539b3d2c368b"
                                                               "964cea:28a3a326a53fa6f5")])
 
-        sessions = process_pcap("samples/http-ntlm.pcap")
-        remaining_credentials = [session.credentials_being_built
-                                 for session in sessions if session.credentials_being_built]
+        remaining_credentials = process_pcap("samples/http-ntlm.pcap").get_remaining_content()
+        remaining_credentials = [c[1] for c in remaining_credentials]  # Only get Credentials from the tuple
 
         print(remaining_credentials)
+
         self.assertTrue(len(remaining_credentials) == 6)
         self.assertTrue(Credentials(hash="administrator::example:ea46e3a07ea448d200000000000000000000000000000000:"
                                          "4d626ea83a02eee710571a2b84241788bd21e3a66ddbf4a5"
