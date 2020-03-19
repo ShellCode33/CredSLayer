@@ -23,6 +23,9 @@ class Credentials(object):
 
     def __eq__(self, other):
 
+        if not isinstance(other, Credentials):
+            raise ValueError("Unsupported comparison")
+
         for item in self.context:
             if item not in other.context or self.context[item] != other.context[item]:
                 return False
