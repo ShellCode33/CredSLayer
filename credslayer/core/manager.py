@@ -7,6 +7,7 @@ import traceback
 import pyshark
 from pyshark.capture.capture import TSharkCrashException, Capture
 from pyshark.packet.packet import Packet
+from pyshark.tshark.tshark import TSharkNotFoundException
 
 from credslayer.core import logger, extract, utils
 from credslayer.core.session import SessionsManager, Session, stop_managed_sessions, SessionException
@@ -85,6 +86,10 @@ def _process_packets_from(packets_input: Capture, manager: SessionsManager, must
     except TSharkCrashException:
         traceback.print_exc()
         logger.error("tshark crashed :(")
+        clean_before_exit()
+
+    except TSharkNotFoundException:
+        logger.error("tshark not found, have you installed it ?")
         clean_before_exit()
 
 
