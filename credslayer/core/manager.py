@@ -15,10 +15,17 @@ from credslayer.parsers import parsers, ntlmssp
 
 
 class MalformedPacketException(Exception):
+    """
+    This exception is raised when a malformed packet has been detected, therefore it cannot be analysed,
+    or at least not by CredSLayer.
+    """
     pass
 
 
 def clean_before_exit():
+    """
+    Makes sure resources are closed properly before exiting CredSLayer.
+    """
     stop_managed_sessions()
 
     if logger.OUTPUT_FILE:
@@ -26,12 +33,29 @@ def clean_before_exit():
 
 
 def signal_handler(sig, frame):
+    """
+    Handles the SIGINT signal (received when hitting CTRL+C).
+    """
     clean_before_exit()
     print("\nBye !")
     os._exit(0)  # Pretty hardcore I know, but pyshark is a real PITA when it comes to handling signals
 
 
 def _process_packet(session: Session, packet: Packet, must_inspect_strings: bool):
+    """
+    Processes a single packet within its context thanks to the `Session` instance.
+
+    Parameters
+    ----------
+    session : Session
+        The session the packet belongs to.
+
+    packet : Packet
+        To packet to be analysed.
+
+    must_inspect_strings : bool
+        Whether strings in the packet should be inspected or not. Can be pretty heavy on the CPU.
+    """
 
     if len(packet.layers) > 3:  # == tshark parsed something else than ETH, IP, TCP
 
@@ -64,6 +88,20 @@ def _process_packet(session: Session, packet: Packet, must_inspect_strings: bool
 
 
 def _process_packets_from(packets_input: Capture, manager: SessionsManager, must_inspect_strings: bool):
+    """
+    Loops over available packets, retrieves its session and handles potential exceptions.
+
+    Parameters
+    ----------
+    packets_input : Capture
+        Iterator containing packets, can come from a pcap or a live capture.
+
+    manager : SessionsManager
+        The manager to be used to process the given packets.
+
+    must_inspect_strings : bool
+        Whether strings in the packet should be inspected or not. Can be pretty heavy on the CPU.
+    """
 
     try:
         for packet in packets_input:
@@ -94,6 +132,33 @@ def _process_packets_from(packets_input: Capture, manager: SessionsManager, must
 
 
 def process_pcap(filename: str, must_inspect_strings=False, tshark_filter=None, debug=False, decode_as=None) -> SessionsManager:
+    """
+    Initialize the processing of a pcap file and retrieve results of the analysis.
+    This is one of the main entry points most people will want to use.
+
+    Parameters
+    ----------
+    filename : str
+        Path to the pcap to process.
+
+    must_inspect_strings : bool
+        Whether strings in the packet should be inspected or not. Can be pretty heavy on the CPU.
+
+    tshark_filter : string
+        Display filter passed to tshark. Example : "ip.src == 192.168.1.42 or ip.dst == 192.168.1.42"
+        See : https://wiki.wireshark.org/DisplayFilters
+
+    debug : bool
+        Toggle the debug mode of tshark, useful to track down bugs.
+
+    decode_as : Dict[str, str]
+        Associate a protocol to a port so that tshark processes packets correctly.
+
+    Returns
+    -------
+    A `SessionsManager` instance which gives to ability to the user of that function to retrieve
+    what has been found in the pcap.
+    """
 
     logger.DEBUG_MODE = debug
     sessions_manager = SessionsManager()
@@ -120,6 +185,31 @@ def process_pcap(filename: str, must_inspect_strings=False, tshark_filter=None, 
 
 
 def active_processing(interface: str, must_inspect_strings=False, tshark_filter=None, debug=False, decode_as=None, pcap_output=None):
+    """
+    Initialize packets capturing on a given interface file.
+    This is one of the main entry points most people will want to use.
+
+    Parameters
+    ----------
+    interface : str
+        The network interface to listen to.
+
+    must_inspect_strings : bool
+        Whether strings in the packet should be inspected or not. Can be pretty heavy on the CPU.
+
+    tshark_filter : string
+        Capture filter passed to tshark. Example : "host 192.168.1.42"
+        See : https://wiki.wireshark.org/CaptureFilters
+
+    debug : bool
+        Toggle the debug mode of tshark, useful to track down bugs.
+
+    decode_as : Dict[str, str]
+        Associate a protocol to a port so that tshark processes packets correctly.
+
+    pcap_output : str
+        Captured packets will be output to that file path.
+    """
 
     logger.DEBUG_MODE = debug
 

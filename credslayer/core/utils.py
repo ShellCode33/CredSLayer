@@ -15,6 +15,19 @@ STRING_EXTRACT_REGEX = re.compile(b"[^" + printable_charset.encode() + b"]+")
 
 class Credentials(object):
 
+    """
+    This object represents credentials found in network captures. CredSLayer considers two forms of credentials :
+    the classic pair username/password and hashes (that can be cracked or used in pass-the-hash attacks).
+
+    Attributes
+    ----------
+    username : str
+    password : str
+    hash : str
+    context : dict
+        Contains information on how/where the credentials can be used.
+    """
+
     def __init__(self, username=None, password=None, hash=None, context=None):
         self.username = username
         self.password = password
@@ -52,12 +65,29 @@ class Credentials(object):
         return string[:-4]
 
     def __bool__(self):
+        """
+        Whether the credentials should be considered empty or not.
+        """
         return self.username is not None \
-               or self.password is not None \
-               or self.hash is not None
+            or self.password is not None \
+            or self.hash is not None
 
 
 def extract_strings_from(packet: Packet) -> List[str]:
+    """
+    Desesparately tries to extract strings from a packet raw bytes.
+
+    Parameters
+    ----------
+    packet : Packet
+        The `Packet` to extract strings from.
+
+    Returns
+    -------
+    List[str]
+        The strings found in the packet.
+    """
+
     if "tcp" not in packet or not hasattr(packet["tcp"], "payload"):
         return []
 
@@ -88,7 +118,8 @@ def extract_strings_from(packet: Packet) -> List[str]:
 
 
 def extract_strings_splitted_on_end_of_line_from(packet: Packet) -> List[str]:
-    """Builds a list of strings that are separated by a new line character.
+    """
+    Builds a list of strings that are separated by a new line character (i.e. \r \n and \0).
     It's very useful when trying to extract data while limiting false positives.
     """
 
@@ -97,8 +128,29 @@ def extract_strings_splitted_on_end_of_line_from(packet: Packet) -> List[str]:
     return re.split(r"[\r\n\x00]+", strings)
 
 
-# https://tools.ietf.org/html/rfc4616
 def parse_sasl_creds(base64_encoded, sasl_type) -> Tuple[str, str]:
+    """
+    This function aims to parse SASL auth tokens.
+    https://tools.ietf.org/html/rfc4616
+
+    Parameters
+    ----------
+    base64_encoded
+        The input containing the SASL payload.
+
+    sasl_type
+        The SASL auth mechanism, only PLAIN is supported for now.
+
+    Returns
+    -------
+    Tuple
+        Of username and password.
+
+    Raises
+    ------
+    TypeError
+        If the auth mechanism is not supported.
+    """
     if sasl_type == "PLAIN":
         auth_content = base64.b64decode(base64_encoded)
         auth_content = auth_content.split(b"\x00")
@@ -107,4 +159,4 @@ def parse_sasl_creds(base64_encoded, sasl_type) -> Tuple[str, str]:
         return username, password
 
     else:
-        raise Exception("SASL auth type not supported: " + sasl_type)
+        raise TypeError("SASL auth type not supported: " + sasl_type)
