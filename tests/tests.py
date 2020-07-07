@@ -200,8 +200,7 @@ class ManagerTest(unittest.TestCase):
     def test_protocol_decode_as(self):
         from credslayer.core import manager
         credentials_list = manager.process_pcap("samples/telnet-hidden.pcap",
-                                                decode_as={"tcp.port==1337": "telnet"})\
-                                  .get_list_of_all_credentials()
+                                                decode_as={"tcp.port==1337": "telnet"}).get_list_of_all_credentials()
         print(credentials_list)
         self.assertTrue(Credentials("shellcode", "shellcode") in credentials_list)
 
