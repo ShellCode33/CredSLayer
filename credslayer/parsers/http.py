@@ -15,18 +15,18 @@ HTTP_METHODS = ["OPTIONS", "GET", "HEAD", "POST", "PUT", "DELETE", "TRACE", "CON
 HTTP_AUTH_MAX_LOGIN_POST_LENGTH = 500  # We ignore every posted content exceeding that length to prevent false positives
 HTTP_AUTH_POTENTIAL_USERNAMES = ['log', 'login', 'wpname', 'ahd_username', 'unickname', 'nickname', 'user', 'user_name',
                                  'alias', 'pseudo', 'email', 'username', '_username', 'userid', 'form_loginname',
-                                 'loginname', 'login_id', 'loginid', 'session_key', 'sessionkey', 'pop_login', 'uid',
-                                 'id', 'user_id', 'screename', 'uname', 'ulogin', 'acctname', 'account', 'member',
+                                 'loginname', 'login_id', 'loginid', 'session_key', 'sessionkey', 'pop_login',
+                                 'user_id', 'screename', 'uname', 'ulogin', 'acctname', 'account', 'member',
                                  'mailaddress', 'membername', 'login_username', 'login_email', 'loginusername',
-                                 'loginemail', 'uin', 'sign-in', 'j_username']
+                                 'loginemail', 'sign-in', 'j_username']
 
 HTTP_AUTH_POTENTIAL_PASSWORDS = ['ahd_password', 'pass', 'password', '_password', 'passwd', 'session_password',
-                                 'sessionpassword', 'login_password', 'loginpassword', 'form_pw', 'pw', 'userpassword',
-                                 'pwd', 'upassword', 'login_password', 'passwort', 'passwrd', 'wppassword', 'upasswd',
+                                 'sessionpassword', 'login_password', 'loginpassword', 'form_pw', 'userpassword',
+                                 'upassword', 'login_password', 'passwort', 'passwrd', 'wppassword', 'upasswd',
                                  'j_password']
 
 
-def analyse(session: Session, layer: Layer) -> bool:
+def analyse(session: Session, layer: Layer):
 
     current_creds = session.credentials_being_built
 
@@ -35,10 +35,11 @@ def analyse(session: Session, layer: Layer) -> bool:
         extension = layer.request_uri.split(".")[-1]
 
         if extension in HTTP_IGNORED_EXTENSIONS:
-            return False
+            return
 
-        if hasattr(layer, "request_full_uri") and layer.request_full_uri.startswith("http://ocsp."):  # Ignore Certificate Status Protocol
-            return False
+        # Ignore Certificate Status Protocol
+        if hasattr(layer, "request_full_uri") and layer.request_full_uri.startswith("http://ocsp."):
+            return
 
         if hasattr(layer, "authorization"):
             tokens = layer.authorization.split(" ")
@@ -83,10 +84,8 @@ def analyse(session: Session, layer: Layer) -> bool:
 
                 if credentials.username:
                     logger.found(session, "credentials found: {} -- {}".format(credentials.username, credentials.password))
-                    session.credentials_list.append(credentials)
-
-                    # We return false to prevent the manager from validating the credentials being built
-                    return False
+                    session.credentials_list.append(credentials)  # Don't validate those credentials
+                    return
 
         # GET parameters
         elif hasattr(layer, "request_uri_query"):
@@ -107,10 +106,8 @@ def analyse(session: Session, layer: Layer) -> bool:
             if credentials.username:
                 logger.found(session, "credentials found: {} -- {}".format(credentials.username, credentials.password))
                 logger.info(session, "context: " + str(credentials.context))
-                session.credentials_list.append(credentials)
-
-                # We return false to prevent the manager from validating the credentials being built
-                return False
+                session.credentials_list.append(credentials)  # Don't validate those credentials
+                return
 
     elif hasattr(layer, "response_for_uri"):
 
@@ -122,6 +119,4 @@ def analyse(session: Session, layer: Layer) -> bool:
 
             else:
                 logger.found(session, "basic auth credentials found: {} -- {}".format(current_creds.username, current_creds.password))
-                return True
-
-    return False
+                session.validate_credentials()

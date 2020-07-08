@@ -1,5 +1,7 @@
 # coding: utf-8
+
 import base64
+from typing import Tuple
 
 from pyshark.packet.layer import Layer
 
@@ -7,7 +9,7 @@ from credslayer.core import logger
 from credslayer.core.session import Session
 
 
-def _fix_tshark_widechar_issue(layer) -> (str, str):
+def _fix_tshark_widechar_issue(layer) -> Tuple[str, str]:
     if hasattr(layer, "authorization") and layer.authorization.startswith("NTLM "):  # HTTP header dirty fix
         ntlm_bytes = base64.b64decode(layer.authorization[5:])
         username_offset = int(layer.ntlmssp_string_offset.all_fields[1].show)
@@ -28,16 +30,17 @@ def _fix_tshark_widechar_issue(layer) -> (str, str):
 
 # Great resource : http://davenport.sourceforge.net/ntlm.html#theNtlmv2Response
 
-def analyse(session: Session, layer: Layer, ) -> bool:
+def analyse(session: Session, layer: Layer):
 
     current_creds = session.credentials_being_built
 
-    if not current_creds.is_empty() and hasattr(layer, "nt_status"):
+    if current_creds and hasattr(layer, "nt_status"):
         status = int(layer.nt_status)
 
         if status == 0:  # LOGON SUCCESS
             logger.found(session, "{} found: {}".format(current_creds.context["version"], current_creds.hash))
-            return True
+            session.validate_credentials()
+
         elif status == 3221225581:  # LOGON FAILED
             session.invalidate_credentials_and_clear_session()
 
@@ -78,5 +81,3 @@ def analyse(session: Session, layer: Layer, ) -> bool:
 
             else:  # Unsupported NTLM format, investigate ? Found a pcap w/o ntlm client challenge field
                 session.invalidate_credentials_and_clear_session()
-
-    return False

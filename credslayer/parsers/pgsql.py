@@ -6,7 +6,7 @@ from credslayer.core import logger
 from credslayer.core.session import Session
 
 
-def analyse(session: Session, layer: Layer) -> bool:
+def analyse(session: Session, layer: Layer):
 
     current_creds = session.credentials_being_built
 
@@ -37,7 +37,8 @@ def analyse(session: Session, layer: Layer) -> bool:
             if "database" in current_creds.context:
                 logger.info("Targeting database '{}'".format(current_creds.context["database"]))
 
-            return True
+            session.validate_credentials()
+            return
 
     if hasattr(layer, "parameter_name"):
 
@@ -74,5 +75,3 @@ def analyse(session: Session, layer: Layer) -> bool:
 
         else:
             current_creds.password = layer.password
-
-    return False

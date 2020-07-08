@@ -1,11 +1,12 @@
 # coding: utf-8
+
 from pyshark.packet.layer import Layer
 
 from credslayer.core import logger
 from credslayer.core.session import Session
 
 
-def analyse(session: Session, layer: Layer) -> bool:
+def analyse(session: Session, layer: Layer):
 
     current_creds = session.credentials_being_built
 
@@ -14,7 +15,7 @@ def analyse(session: Session, layer: Layer) -> bool:
 
         if code == 230 and current_creds.username:
             logger.found(session, "credentials found: {} -- {}".format(current_creds.username, current_creds.password))
-            return True
+            session.validate_credentials()
 
         elif code == 430:
             session.invalidate_credentials_and_clear_session()
@@ -27,5 +28,3 @@ def analyse(session: Session, layer: Layer) -> bool:
 
         elif command == "PASS":
             current_creds.password = layer.request_arg
-
-    return False

@@ -1,5 +1,11 @@
 # coding: utf-8
 
+"""
+Each parser within the ``credslayer.parsers`` module will extract credentials of corresponding protocols.
+For example if tshark identifies a packet to be part of the FTP, CredSLayer will automatically dispatch its analysis to
+the ``ftp.py`` parser.
+"""
+
 import os
 from importlib import import_module
 
