@@ -1,2 +1,7 @@
 pyshark
 argparse
+
+# Build doc
+sphinx
+sphinx-argparse
+sphinx_rtd_theme
