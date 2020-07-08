@@ -10,6 +10,8 @@ Have you heard about [Pcredz](https://github.com/lgandx/PCredz) or [net-creds](h
 
 This tool is really helpful if you're doing IT security or if you want to scan your own network to see if anything critical is transmitted.
 
+![alt credslayer_output_example](https://github.com/ShellCode33/CredSLayer/raw/master/docs/example.png)
+
 # Features
 
 Right now, CredSLayer supports the following protocols:
