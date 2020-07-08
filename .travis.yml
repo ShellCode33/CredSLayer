@@ -13,7 +13,10 @@ python:
 - '3.8'
 - 'pypy3'
 
-script: python -m unittest tests/tests.py
+script:
+  - python -m unittest tests/tests.py
+  - make -C docs html
+  - touch docs/_build/html/.nojekyll
 
 deploy:
   - provider: releases
@@ -26,6 +29,14 @@ deploy:
       tags: true
     skip_cleanup: true
     api_key:
+      secure: IcX91IbJikIWp5p9AgJWKVpVIhpBZdpstQmz7hES9BnGdh1o/cLcIHcJGhpJXqSQ+kEspxw5DHMhKYFcKShWmj1TyG4TI1eCNycJ/F8f2d4TRBvucZxNfiPZF7GmxZrWEze6iFJ4p3KPBzwQ2zfggxYwbyEL5d73vfLcVc3nQDpoanRvF94EDobMuAeKk5P01OGRU2IK4pMi1ESOolUZr2XKiNaTgNqol5np/XI6Gte+Mlx8bo+AcVKCC+mSSVotrTsPsRErma9sVF9OYf8OH0jySwAt2tqvWRAC66R+inJMbH1qJdJ1EsO2hyF3N7pe9oIGJZkRqxd7Z20MTDg8zYCydbNQB/bsLZeA1fLmt5uQ3+AmIGnia27v7h5tGd5oeceMUbmXtYbX5midfvDXnpZcpqUE/8aUiN/Lq0Lr6qGGiSjvlynEYBWfMY5W4yLhpsKryTn/oaeBMAoMg2IY4BFkSZ+Evtu1RQe5EloYzwT/QjJ2LVO6Rb0ORZpmXUZcuFJOLoISFDqjaI5OpamDuxwKzvR6OGwq+sFYTR42rLN4YZ9NVbUb5AqkKdwqvo8qRiEtivkokbcNwRtMSgEnvD1TSLArYHQdY9gvLNP8CTyW6qO+0Wt1/DianqjYhsk3fBBHijfRbBBRqfyYNmipLm0cPZ1VW4OeBRF+A1OumRc=
+  - provider: pages
+    skip_cleanup: true
+    local_dir: docs/_build/html/
+    on:
+      repo: ShellCode33/CredSLayer
+      tags: true
+    github_token:
       secure: IcX91IbJikIWp5p9AgJWKVpVIhpBZdpstQmz7hES9BnGdh1o/cLcIHcJGhpJXqSQ+kEspxw5DHMhKYFcKShWmj1TyG4TI1eCNycJ/F8f2d4TRBvucZxNfiPZF7GmxZrWEze6iFJ4p3KPBzwQ2zfggxYwbyEL5d73vfLcVc3nQDpoanRvF94EDobMuAeKk5P01OGRU2IK4pMi1ESOolUZr2XKiNaTgNqol5np/XI6Gte+Mlx8bo+AcVKCC+mSSVotrTsPsRErma9sVF9OYf8OH0jySwAt2tqvWRAC66R+inJMbH1qJdJ1EsO2hyF3N7pe9oIGJZkRqxd7Z20MTDg8zYCydbNQB/bsLZeA1fLmt5uQ3+AmIGnia27v7h5tGd5oeceMUbmXtYbX5midfvDXnpZcpqUE/8aUiN/Lq0Lr6qGGiSjvlynEYBWfMY5W4yLhpsKryTn/oaeBMAoMg2IY4BFkSZ+Evtu1RQe5EloYzwT/QjJ2LVO6Rb0ORZpmXUZcuFJOLoISFDqjaI5OpamDuxwKzvR6OGwq+sFYTR42rLN4YZ9NVbUb5AqkKdwqvo8qRiEtivkokbcNwRtMSgEnvD1TSLArYHQdY9gvLNP8CTyW6qO+0Wt1/DianqjYhsk3fBBHijfRbBBRqfyYNmipLm0cPZ1VW4OeBRF+A1OumRc=
   - provider: pypi
     distributions: sdist bdist_wheel

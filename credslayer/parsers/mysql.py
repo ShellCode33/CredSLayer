@@ -6,7 +6,7 @@ from credslayer.core import logger
 from credslayer.core.session import Session
 
 
-def analyse(session: Session, layer: Layer) -> bool:
+def analyse(session: Session, layer: Layer):
 
     current_creds = session.credentials_being_built
 
@@ -44,6 +44,4 @@ def analyse(session: Session, layer: Layer) -> bool:
                 logger.found(session, "{} found: {}".format(item, current_creds.context[item]))
 
             logger.found(session, "credentials found: {} -- {}".format(current_creds.username, current_creds.hash))
-            return True
-
-    return False
+            session.validate_credentials()

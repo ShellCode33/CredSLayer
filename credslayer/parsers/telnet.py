@@ -9,7 +9,7 @@ POTENTIAL_AUTH_SUCCESS = ["last login", "welcome"]
 POTENTIAL_AUTH_ERROR = ["incorrect", "error"]
 
 
-def _is_username_duplicated(username):
+def _is_username_duplicated(username: str) -> bool:
     """
     Detects if the username has been duplicated because of telnet's echo mode.
     Duplicated username example : aaddmmiinn
@@ -27,10 +27,10 @@ def _is_username_duplicated(username):
     return True
 
 
-def analyse(session: Session, layer: Layer) -> bool:
+def analyse(session: Session, layer: Layer):
 
     if not hasattr(layer, "data"):
-        return False
+        return
 
     current_creds = session.credentials_being_built
 
@@ -63,7 +63,8 @@ def analyse(session: Session, layer: Layer) -> bool:
                 for auth_success_msg in POTENTIAL_AUTH_SUCCESS:
                     if auth_success_msg in lowered_data:
                         logger.found(session, "credentials found: {} -- {}".format(current_creds.username, current_creds.password))
-                        return True
+                        session.validate_credentials()
+                        return
 
                 for auth_error_msg in POTENTIAL_AUTH_ERROR:
                     if auth_error_msg in lowered_data:
@@ -74,8 +75,9 @@ def analyse(session: Session, layer: Layer) -> bool:
 
                 if "\r" in session["data_being_built"] or "\n" in session["data_being_built"]:
                     data_being_built = session["data_being_built"].replace("\r", "")\
-                                                                             .replace("\n", "")\
-                                                                             .replace("\x00", "")
+                                                                  .replace("\n", "")\
+                                                                  .replace("\x00", "")
+
                     if session["user_being_built"]:
                         username = data_being_built
 
@@ -90,5 +92,3 @@ def analyse(session: Session, layer: Layer) -> bool:
                         session["pass_being_built"] = False
 
                     session["data_being_built"] = ""
-
-    return False

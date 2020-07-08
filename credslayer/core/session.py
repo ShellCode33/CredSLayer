@@ -1,15 +1,70 @@
 # coding: utf-8
 
 import time
-from threading import Thread
-from typing import List
+from threading import Thread, Lock
+from typing import List, Tuple
 
 from pyshark.packet.packet import Packet
 
 from credslayer.core.utils import Credentials
 
 
+_running_threads = []  # type: List[Thread]
+_keep_threads_alive_lock = Lock()
+_keep_threads_alive_lock.acquire()  # Thread will stay alive as long as the lock is acquired
+
+
+def stop_managed_sessions():
+    """
+    Will stop threads managing sessions.
+    """
+    _keep_threads_alive_lock.release()
+
+    for thread in _running_threads:
+        thread.join()
+
+    _running_threads.clear()
+
+
+class SessionException(Exception):
+    """
+    Exception related to the `Session` class.
+    """
+    pass
+
+
 class Session(dict):
+    """
+    A `Session` object represents an exchange of packets between two parties. TCP and UDP communication are not
+    considered in the same way. Put simply a session is a way of grouping packets together in order to create some
+    context. CredSLayer identifies a TCP exchange based on the IP addresses and port of each party.
+    Here's an example of its string representation : "192.168.1.42:42000 <-> 42.42.42.42:443"
+    This representation is the identity of a session, it's what makes it unique. On the other hand, UDP being a
+    stateless protocol, its source port cannot be relied on because it is always different. That's why CredSLayer
+    builds UDP sessions based on the source address and the destination address and port.
+    Here's a example of its string representation : "192.168.1.42 <-> 42.42.42.42:53"
+
+    Attributes
+    ----------
+    protocol : str
+        The identified protocol, at first it will either be TCP or UDP, but it can be updated at any time to be more
+        specific about what the protocol being analysed really is.
+
+    credentials_being_built : Credentials
+        Credentials going over the wire are often split into multiple packets (e.g. the username in a first packet,
+        then the password in a second one), this is why each `Session` object has an instance of the `Credentials`
+        object which will hold all the information being gathered to compose the credentials over time.
+
+    credentials_list : List[Credentials]
+        A list of credentials found so far in the session. Most of the time it will only hold a single `Credentials`
+        instance.
+
+    Raises
+    ------
+    SessionException
+        This exception will occur if the session relative to a packet cannot be  built (mostly because the packet
+        isn't TCP or UDP based).
+    """
 
     INACTIVE_SESSION_DELAY = 10  # in seconds
 
@@ -23,7 +78,7 @@ class Session(dict):
             ip_type = "ip"
             proto_id = int(getattr(packet, ip_type).proto)
         else:
-            raise Exception("IP layer not found")
+            raise SessionException("IP layer not found")
 
         if proto_id == 6:
             self.protocol = "tcp"
@@ -35,7 +90,7 @@ class Session(dict):
             src = packet[ip_type].src
             dst = packet[ip_type].dst
         else:
-            raise Exception("Unsupported protocol id: " + str(proto_id))
+            raise SessionException("Unsupported protocol id: " + str(proto_id))
 
         if packet[self.protocol].srcport == packet[self.protocol].dstport:
             # Alphabetic ordering on IP addresses if ports are the same
@@ -53,7 +108,7 @@ class Session(dict):
         self._session_identifier = "{} {}".format(self.protocol.upper(), self._session_string_representation)
         self._last_seen_time = time.time()
         self.credentials_being_built = Credentials()
-        self.credentials_list = []
+        self.credentials_list = []  # type: List[Credentials]
 
     def __eq__(self, other):
         if isinstance(other, Session):
@@ -63,7 +118,7 @@ class Session(dict):
         else:
             raise ValueError("Can't compare session with something else than a session or a string")
 
-    def __str__(self):
+    def __repr__(self):
         return self._session_string_representation
 
     def __setitem__(self, name, value):
@@ -77,10 +132,21 @@ class Session(dict):
             return None
 
     def validate_credentials(self):
+        """
+        At some point, a CredSLayer parser should be able to identify that a successful authentication has been made,
+        to tell CredSLayer the `credentials_being_built` are valid, this method must be called. This will create a new
+        instance of `Credentials` in order to build new potential incoming credentials of the same session.
+        """
         self.credentials_list.append(self.credentials_being_built)
         self.credentials_being_built = Credentials()
 
     def invalidate_credentials_and_clear_session(self):
+        """
+        At some point, a CredSLayer parser should be able to identify that an unsuccessful authentication has been made,
+        to tell CredSLayer the `credentials_being_built` are invalid and what it contains must be discarded, this method
+        must be called. This will create a new instance of `Credentials` in order to build new potential incoming
+        credentials of the same session.
+        """
         self.clear()
         self.credentials_being_built = Credentials()
 
@@ -88,19 +154,41 @@ class Session(dict):
         return time.time() - self._last_seen_time > Session.INACTIVE_SESSION_DELAY
 
 
-class SessionList(list):
+class SessionsManager(List[Session]):
+    """
+    The `SessionsManager` object is basically a list of `Session` objects, it will most likely be created once and be
+    used during the whole program's lifespan. It ensures the uniqueness of a `Session`, can delete outdated sessions and
+    enables the developer to retrieve data about all the sessions at once (e.g. all credentials found so far).
+    """
 
-    def __init__(self):
+    def __init__(self, remove_outdated=False):
+        """
+        Parameters
+        ----------
+        remove_outdated : bool
+            Whether old sessions should be removed from memory after a given time or not. This prevents RAM overloading.
+            Especially useful when listening indefinitely on an interface.
+        """
         super().__init__()
-        self._thread = Thread(target=self._manage)
-        self._keep_manager_alive = True
 
-    def __del__(self):
-        if self._thread.is_alive():
-            self._keep_manager_alive = False
-            self._thread.join()
+        if remove_outdated:
+            thread = Thread(target=self._manage)
+            _running_threads.append(thread)
+            thread.start()
 
     def get_session_of(self, packet: Packet) -> Session:
+        """
+        Parameters
+        ----------
+        packet : Packet
+            The packet from which the `Session` object will be created or retrieved.
+
+        Returns
+        -------
+        Session
+            This method returns the `Session` object associated to the given packet.
+
+        """
         session = Session(packet)
 
         try:
@@ -111,54 +199,45 @@ class SessionList(list):
 
         return session
 
-    def manage_outdated_sessions(self):
-        self._thread.start()
-
     def _manage(self):
-        from credslayer.core import logger
-
-        logger.debug("Starting thread...")
-
-        while True:
-
-            for i in range(Session.INACTIVE_SESSION_DELAY):
-                time.sleep(1)
-
-                if not self._keep_manager_alive:
-                    self.process_sessions_remaining_content()
-                    logger.debug("Thread stopped.")
-                    return
-
-            logger.debug("Removing outdated sessions...")
+        """
+        This function is an almost-infinite loop running in a separate thread which deletes old sessions that will
+        probably not be used anymore. This is here mostly to prevent RAM overloading.
+        """
+        while not _keep_threads_alive_lock.acquire(timeout=Session.INACTIVE_SESSION_DELAY):
             self._remove_outdated_sessions()
 
     def _remove_outdated_sessions(self):
+        """
+        Deletes unused `Session` objects based on how long no activity has been seen.
+        """
         sessions_to_remove = [session for session in self if session.should_be_deleted()]
 
         for session in sessions_to_remove:
             self.remove(session)
 
-    def process_sessions_remaining_content(self) -> List[Credentials]:
+    def get_remaining_content(self) -> List[Tuple[Session, Credentials]]:
+        """
+        Sometimes CredSLayer parsers are not able to tell if the provided credentials were valid or not, the `Session`
+        instance still conserves those, and this method is here to return what's remaining in all sessions.
 
-        from credslayer.core import logger
-        remaining = [session for session in self if not session.credentials_being_built.is_empty()]
+        Returns
+        -------
+        List[Tuple[Session, Credentials]]
+            Each entry is a tuple of the `Session` instance and the remaining `credentials_being_built`.
+        """
+        return [(session, session.credentials_being_built) for session in self if session.credentials_being_built]
 
-        if len(remaining) > 0:
-            logger.info("Interesting things have been found but the tool weren't able validate them: ")
-            # List things that haven't been reported (sometimes the success indicator has
-            # not been captured and credentials stay in the session without being logged)
-            for session in remaining:
-                logger.info(session, str(session.credentials_being_built))
-
-        return remaining
-
-    def get_list_of_all_credentials(self):
+    def get_list_of_all_credentials(self) -> List[Credentials]:
+        """
+        Returns
+        -------
+        List[Credentials]
+            A list of all valid `Credentials` instances built during the whole `SessionManager` lifespan.
+        """
         all_credentials = []
 
         for session in self:
             all_credentials += session.credentials_list
 
         return all_credentials
-
-    def __str__(self):
-        return str([str(session) for session in self])

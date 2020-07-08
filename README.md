@@ -14,6 +14,9 @@ This tool is really helpful if you're doing IT security or if you want to scan y
 
 # Features
 
+CredSLayer doesn't waste your time with invalid credentials, it makes sure credentials are valid.
+Yet if it's not able to tell whether they're valid or not, what has been found will be printed out anyway. 
+
 Right now, CredSLayer supports the following protocols:
 * FTP
 * SMTP / IMAP / POP3

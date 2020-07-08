@@ -6,7 +6,7 @@ from credslayer.core import logger
 from credslayer.core.session import Session
 
 
-def analyse(session: Session, layer: Layer) -> bool:
+def analyse(session: Session, layer: Layer):
 
     current_creds = session.credentials_being_built
 
@@ -27,8 +27,7 @@ def analyse(session: Session, layer: Layer) -> bool:
 
             if status == "OK":
                 logger.found(session, "credentials found: {} -- {}".format(current_creds.username, current_creds.password))
-                return True
+                session.validate_credentials()
+
             elif status == "NO" or status == "BAD":
                 session.invalidate_credentials_and_clear_session()
-
-    return False

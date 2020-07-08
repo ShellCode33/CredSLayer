@@ -2,23 +2,19 @@
 # coding: utf-8
 
 import socket
-
-import argparse
 import os
 import traceback
-
-import argcomplete
+from argparse import ArgumentParser
 
 from credslayer.core import manager, logger
 
 
-def main():
-
-    parser = argparse.ArgumentParser(
-        description='Helps you find credentials and other interesting stuff in network captures')
+def build_argument_parser() -> ArgumentParser:
+    parser = ArgumentParser(
+        description='Helps you find credentials and other interesting stuff in network captures.')
     parser.add_argument("pcapfiles",
                         nargs='*',
-                        help='pcap files you want to analyse.')
+                        help='pcap files you want to analyse')
     parser.add_argument('-l', '--listen',
                         help='start active processing on specified interface',
                         metavar='INTERFACE')
@@ -30,21 +26,24 @@ def main():
                         metavar='FILE')
     parser.add_argument('-s', '--string-inspection',
                         choices=["enable", "disable"],
-                        help='let you specify if you want to look for interesting strings (email addresses, '
-                             'credit cards, ...) in network captures. Pretty heavy on the CPU. '
-                             'Enabled by default on pcap files, disabled on live captures.')
+                        help='whether you want to look for interesting strings (email addresses, '
+                             'credit cards, ...) or not (pretty heavy on the CPU, '
+                             'enabled by default on pcap files, disabled on live captures)')
     parser.add_argument('-f', '--filter',
                         metavar='IP',
-                        help='only show '
-                             'packets involving the specified IP.')
+                        help='process packets involving the specified IP')
     parser.add_argument('-m', '--map',
                         action='append',
                         metavar='PORT:PROTOCOL',
                         help='map a port to a protocol')
     parser.add_argument('--debug', action='store_true',
-                        help='put CredSLayer and pyshark in debug mode.')
+                        help='put CredSLayer and pyshark in debug mode')
 
-    argcomplete.autocomplete(parser)
+    return parser
+
+
+def main():
+    parser = build_argument_parser()
     args = parser.parse_args()
 
     if args.listen:
@@ -89,8 +88,8 @@ def main():
     if args.map:
         decode_map = {}
 
-        for map in args.map:
-            tokens = map.split(":")
+        for m in args.map:
+            tokens = m.split(":")
 
             if len(tokens) != 2:
                 parser.error("Invalid port mapping")
