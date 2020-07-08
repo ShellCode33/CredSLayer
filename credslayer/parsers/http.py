@@ -15,14 +15,14 @@ HTTP_METHODS = ["OPTIONS", "GET", "HEAD", "POST", "PUT", "DELETE", "TRACE", "CON
 HTTP_AUTH_MAX_LOGIN_POST_LENGTH = 500  # We ignore every posted content exceeding that length to prevent false positives
 HTTP_AUTH_POTENTIAL_USERNAMES = ['log', 'login', 'wpname', 'ahd_username', 'unickname', 'nickname', 'user', 'user_name',
                                  'alias', 'pseudo', 'email', 'username', '_username', 'userid', 'form_loginname',
-                                 'loginname', 'login_id', 'loginid', 'session_key', 'sessionkey', 'pop_login', 'uid',
-                                 'id', 'user_id', 'screename', 'uname', 'ulogin', 'acctname', 'account', 'member',
+                                 'loginname', 'login_id', 'loginid', 'session_key', 'sessionkey', 'pop_login',
+                                 'user_id', 'screename', 'uname', 'ulogin', 'acctname', 'account', 'member',
                                  'mailaddress', 'membername', 'login_username', 'login_email', 'loginusername',
-                                 'loginemail', 'uin', 'sign-in', 'j_username']
+                                 'loginemail', 'sign-in', 'j_username']
 
 HTTP_AUTH_POTENTIAL_PASSWORDS = ['ahd_password', 'pass', 'password', '_password', 'passwd', 'session_password',
-                                 'sessionpassword', 'login_password', 'loginpassword', 'form_pw', 'pw', 'userpassword',
-                                 'pwd', 'upassword', 'login_password', 'passwort', 'passwrd', 'wppassword', 'upasswd',
+                                 'sessionpassword', 'login_password', 'loginpassword', 'form_pw', 'userpassword',
+                                 'upassword', 'login_password', 'passwort', 'passwrd', 'wppassword', 'upasswd',
                                  'j_password']
 
 
