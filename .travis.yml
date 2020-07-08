@@ -16,6 +16,7 @@ python:
 script:
   - python -m unittest tests/tests.py
   - make -C docs html
+  - touch docs/_build/html/.nojekyll
 
 deploy:
   - provider: releases
