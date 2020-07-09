@@ -1,0 +1,1 @@
+Head over the [online documentation](https://shellcode33.github.io/CredSLayer/) ;)
