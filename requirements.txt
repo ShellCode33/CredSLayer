@@ -1,5 +1,4 @@
 pyshark
-argparse
 
 # Build doc
 sphinx

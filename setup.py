@@ -29,9 +29,7 @@ setup(
     ],
 
     install_requires=[
-        "pyshark",
-        "argparse",
-        "argcomplete"
+        "pyshark"
     ],
 
     entry_points={
