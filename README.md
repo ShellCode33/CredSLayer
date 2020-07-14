@@ -8,11 +8,11 @@ CredSLayer goal is to look for credentials and other useful stuff in network cap
 
 This tool has been heavily inspired by [Pcredz](https://github.com/lgandx/PCredz) and [net-creds](https://github.com/DanMcInerney/net-creds) but is built with extensibility in mind.
 Pcredz and net-creds are great, but they are really hard to maintain and improve.
-Unlike these tools which are using regex and raw bytes parsing, CredSLayer takes advantage of Wireshark dissectors which have proven to be pretty accurate and reliable.
+Unlike these tools which are using regex and raw bytes parsing, CredSLayer takes advantage of Wireshark dissectors which have proven over time to be pretty accurate and reliable.
 It makes it really easy to add support for new protocols.
 
 
-This tool is really helpful if you're doing IT security or if you want to scan your own network to see if anything critical is transmitted.
+This tool can be really helpful if you're doing IT security or if you want to scan your own network to see if anything critical is transmitted.
 
 ![alt credslayer_output_example](https://github.com/ShellCode33/CredSLayer/raw/master/docs/example.png)
 
