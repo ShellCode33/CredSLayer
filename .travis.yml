@@ -7,53 +7,48 @@ addons:
     - tshark
 
 python:
-- 3.5
-- 3.6
-- 3.7
-- 3.8
-- pypy3
+  - "3.5"
+  - "3.6"
+  - "3.7"
+  - "3.8"
+  - "pypy3"
 
-script:
-  - python -m unittest tests/tests.py
+script: python -m unittest tests/tests.py
 
 # The default job (above) is the test job, the package build job is specified below
 
 jobs:
   include:
-    - stage: build
-    python: 3.8
-
+  - stage: build
+    python: "3.8"
     before_deploy:
       - make -C docs html
       - touch docs/_build/html/.nojekyll
       - python setup.py sdist bdist_wheel
-
     deploy:
-    - provider: releases
-      file_glob: true
-      file:
-      - dist/*.whl
-      - dist/*.tar.gz
-      on:
-        repo: ShellCode33/CredSLayer
-        tags: true
-      skip_cleanup: true
-      api_key:
-        secure: IcX91IbJikIWp5p9AgJWKVpVIhpBZdpstQmz7hES9BnGdh1o/cLcIHcJGhpJXqSQ+kEspxw5DHMhKYFcKShWmj1TyG4TI1eCNycJ/F8f2d4TRBvucZxNfiPZF7GmxZrWEze6iFJ4p3KPBzwQ2zfggxYwbyEL5d73vfLcVc3nQDpoanRvF94EDobMuAeKk5P01OGRU2IK4pMi1ESOolUZr2XKiNaTgNqol5np/XI6Gte+Mlx8bo+AcVKCC+mSSVotrTsPsRErma9sVF9OYf8OH0jySwAt2tqvWRAC66R+inJMbH1qJdJ1EsO2hyF3N7pe9oIGJZkRqxd7Z20MTDg8zYCydbNQB/bsLZeA1fLmt5uQ3+AmIGnia27v7h5tGd5oeceMUbmXtYbX5midfvDXnpZcpqUE/8aUiN/Lq0Lr6qGGiSjvlynEYBWfMY5W4yLhpsKryTn/oaeBMAoMg2IY4BFkSZ+Evtu1RQe5EloYzwT/QjJ2LVO6Rb0ORZpmXUZcuFJOLoISFDqjaI5OpamDuxwKzvR6OGwq+sFYTR42rLN4YZ9NVbUb5AqkKdwqvo8qRiEtivkokbcNwRtMSgEnvD1TSLArYHQdY9gvLNP8CTyW6qO+0Wt1/DianqjYhsk3fBBHijfRbBBRqfyYNmipLm0cPZ1VW4OeBRF+A1OumRc=
-
-    - provider: pages
-      skip_cleanup: true
-      local_dir: docs/_build/html/
-      on:
-        tags: true
-      github_token:
-        secure: IcX91IbJikIWp5p9AgJWKVpVIhpBZdpstQmz7hES9BnGdh1o/cLcIHcJGhpJXqSQ+kEspxw5DHMhKYFcKShWmj1TyG4TI1eCNycJ/F8f2d4TRBvucZxNfiPZF7GmxZrWEze6iFJ4p3KPBzwQ2zfggxYwbyEL5d73vfLcVc3nQDpoanRvF94EDobMuAeKk5P01OGRU2IK4pMi1ESOolUZr2XKiNaTgNqol5np/XI6Gte+Mlx8bo+AcVKCC+mSSVotrTsPsRErma9sVF9OYf8OH0jySwAt2tqvWRAC66R+inJMbH1qJdJ1EsO2hyF3N7pe9oIGJZkRqxd7Z20MTDg8zYCydbNQB/bsLZeA1fLmt5uQ3+AmIGnia27v7h5tGd5oeceMUbmXtYbX5midfvDXnpZcpqUE/8aUiN/Lq0Lr6qGGiSjvlynEYBWfMY5W4yLhpsKryTn/oaeBMAoMg2IY4BFkSZ+Evtu1RQe5EloYzwT/QjJ2LVO6Rb0ORZpmXUZcuFJOLoISFDqjaI5OpamDuxwKzvR6OGwq+sFYTR42rLN4YZ9NVbUb5AqkKdwqvo8qRiEtivkokbcNwRtMSgEnvD1TSLArYHQdY9gvLNP8CTyW6qO+0Wt1/DianqjYhsk3fBBHijfRbBBRqfyYNmipLm0cPZ1VW4OeBRF+A1OumRc=
-
-    - provider: pypi
-      distributions: sdist bdist_wheel
-      on:
-        tags: true
-      skip_cleanup: true
-      user: __token__
-      password:
-        secure: nbDYdgllAoXpNV0tXLYAp8g1gGEboJ6fhvbC+H2XW66CciMfX5NfhM2mM3RUHIjJOLVsffuj7bg92QhwC72zK6dB/tNXOxw2U4Cs4/+h0hITzKfD2VkCgfVGF3XGR5xlB1hV1ZJAo+74qcNRd3KoaVhLRVpt174iGlXcQaHR0TdKGCExPedbviu5nNZD7Gde1cSvKnXfPk8ZVHzYU0O5X6HVJdOutFV7oAW1uqmEL3/AGc5Gomgfdl0O8AL8Al7SlFGX8Kts5zPE2h11SmGfIJuvkLbJRZwQ8UlHreT3rKpQuGCukXXFQbx3tRmWIb9zM2Np93QZsQ9qFQbyIekJvY9kqp9Lx8sq6sYQcbvXb9fp1+18+m4J5EfJ8D1Z1AgrjOaD2hlqxFwD91yZnWA0AY4yaKGU/GU18t1HTgT3I27AHMCj7OqR/CcRt9h/AYdrPiCzLGWqzvjOX2ayVsquVrkP39z5HFi2pJOp0fuuwMGYrVQ0GRYqMmZbiGiRayJFQXoZ9jY67RaffdDIzapw6pAuKd5bjNe0P6MpAyE7qk5Kz1XnCwNjhLzAFfglI3J5hVkoDzf8S6FFWyhYvWDWtxQ6wJqAzNIAiXJ2hI/5nxEkmKyLMk6dvcJdC9tjMFyqsLrQEbTAu04yJlYHWaAJ0F/HTEVo8Aw4cQdDpNdarfc=
+      - provider: releases
+        file_glob: true
+        file:
+          - dist/*.whl
+          - dist/*.tar.gz
+        on:
+          repo: ShellCode33/CredSLayer
+          tags: true
+        skip_cleanup: true
+        api_key:
+          secure: IcX91IbJikIWp5p9AgJWKVpVIhpBZdpstQmz7hES9BnGdh1o/cLcIHcJGhpJXqSQ+kEspxw5DHMhKYFcKShWmj1TyG4TI1eCNycJ/F8f2d4TRBvucZxNfiPZF7GmxZrWEze6iFJ4p3KPBzwQ2zfggxYwbyEL5d73vfLcVc3nQDpoanRvF94EDobMuAeKk5P01OGRU2IK4pMi1ESOolUZr2XKiNaTgNqol5np/XI6Gte+Mlx8bo+AcVKCC+mSSVotrTsPsRErma9sVF9OYf8OH0jySwAt2tqvWRAC66R+inJMbH1qJdJ1EsO2hyF3N7pe9oIGJZkRqxd7Z20MTDg8zYCydbNQB/bsLZeA1fLmt5uQ3+AmIGnia27v7h5tGd5oeceMUbmXtYbX5midfvDXnpZcpqUE/8aUiN/Lq0Lr6qGGiSjvlynEYBWfMY5W4yLhpsKryTn/oaeBMAoMg2IY4BFkSZ+Evtu1RQe5EloYzwT/QjJ2LVO6Rb0ORZpmXUZcuFJOLoISFDqjaI5OpamDuxwKzvR6OGwq+sFYTR42rLN4YZ9NVbUb5AqkKdwqvo8qRiEtivkokbcNwRtMSgEnvD1TSLArYHQdY9gvLNP8CTyW6qO+0Wt1/DianqjYhsk3fBBHijfRbBBRqfyYNmipLm0cPZ1VW4OeBRF+A1OumRc=
+      - provider: pages
+        skip_cleanup: true
+        local_dir: docs/_build/html/
+        on:
+          tags: true
+        github_token:
+          secure: IcX91IbJikIWp5p9AgJWKVpVIhpBZdpstQmz7hES9BnGdh1o/cLcIHcJGhpJXqSQ+kEspxw5DHMhKYFcKShWmj1TyG4TI1eCNycJ/F8f2d4TRBvucZxNfiPZF7GmxZrWEze6iFJ4p3KPBzwQ2zfggxYwbyEL5d73vfLcVc3nQDpoanRvF94EDobMuAeKk5P01OGRU2IK4pMi1ESOolUZr2XKiNaTgNqol5np/XI6Gte+Mlx8bo+AcVKCC+mSSVotrTsPsRErma9sVF9OYf8OH0jySwAt2tqvWRAC66R+inJMbH1qJdJ1EsO2hyF3N7pe9oIGJZkRqxd7Z20MTDg8zYCydbNQB/bsLZeA1fLmt5uQ3+AmIGnia27v7h5tGd5oeceMUbmXtYbX5midfvDXnpZcpqUE/8aUiN/Lq0Lr6qGGiSjvlynEYBWfMY5W4yLhpsKryTn/oaeBMAoMg2IY4BFkSZ+Evtu1RQe5EloYzwT/QjJ2LVO6Rb0ORZpmXUZcuFJOLoISFDqjaI5OpamDuxwKzvR6OGwq+sFYTR42rLN4YZ9NVbUb5AqkKdwqvo8qRiEtivkokbcNwRtMSgEnvD1TSLArYHQdY9gvLNP8CTyW6qO+0Wt1/DianqjYhsk3fBBHijfRbBBRqfyYNmipLm0cPZ1VW4OeBRF+A1OumRc=
+      - provider: pypi
+        distributions: sdist bdist_wheel
+        on:
+          tags: true
+        skip_cleanup: true
+        user: __token__
+        password:
+          secure: nbDYdgllAoXpNV0tXLYAp8g1gGEboJ6fhvbC+H2XW66CciMfX5NfhM2mM3RUHIjJOLVsffuj7bg92QhwC72zK6dB/tNXOxw2U4Cs4/+h0hITzKfD2VkCgfVGF3XGR5xlB1hV1ZJAo+74qcNRd3KoaVhLRVpt174iGlXcQaHR0TdKGCExPedbviu5nNZD7Gde1cSvKnXfPk8ZVHzYU0O5X6HVJdOutFV7oAW1uqmEL3/AGc5Gomgfdl0O8AL8Al7SlFGX8Kts5zPE2h11SmGfIJuvkLbJRZwQ8UlHreT3rKpQuGCukXXFQbx3tRmWIb9zM2Np93QZsQ9qFQbyIekJvY9kqp9Lx8sq6sYQcbvXb9fp1+18+m4J5EfJ8D1Z1AgrjOaD2hlqxFwD91yZnWA0AY4yaKGU/GU18t1HTgT3I27AHMCj7OqR/CcRt9h/AYdrPiCzLGWqzvjOX2ayVsquVrkP39z5HFi2pJOp0fuuwMGYrVQ0GRYqMmZbiGiRayJFQXoZ9jY67RaffdDIzapw6pAuKd5bjNe0P6MpAyE7qk5Kz1XnCwNjhLzAFfglI3J5hVkoDzf8S6FFWyhYvWDWtxQ6wJqAzNIAiXJ2hI/5nxEkmKyLMk6dvcJdC9tjMFyqsLrQEbTAu04yJlYHWaAJ0F/HTEVo8Aw4cQdDpNdarfc=
