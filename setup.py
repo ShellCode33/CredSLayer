@@ -14,6 +14,7 @@ setup(
     long_description_content_type='text/markdown',
     keywords="credentials security networking extraction mining wireshark tshark dissector password",
     license="GPLv3",
+    license_files=["LICENSE"],
     author='ShellCode',
     author_email='shellcode33@protonmail.ch',
     url='https://github.com/ShellCode33/CredSLayer',
