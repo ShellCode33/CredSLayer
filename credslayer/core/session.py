@@ -67,6 +67,7 @@ class Session(dict):
     """
 
     INACTIVE_SESSION_DELAY = 10  # in seconds
+    creds_found_callback = None
 
     def __init__(self, packet: Packet):
         super().__init__()
@@ -138,6 +139,10 @@ class Session(dict):
         instance of `Credentials` in order to build new potential incoming credentials of the same session.
         """
         self.credentials_list.append(self.credentials_being_built)
+
+        if Session.creds_found_callback:
+            Session.creds_found_callback(self.credentials_being_built)
+
         self.credentials_being_built = Credentials()
 
     def invalidate_credentials_and_clear_session(self):

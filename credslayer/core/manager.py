@@ -87,7 +87,7 @@ def _process_packet(session: Session, packet: Packet, must_inspect_strings: bool
             logger.info(session, "Credit card '{}' found: '{}'".format(credit_card.name, credit_card.number))
 
 
-def _process_packets_from(packets_input: Capture, manager: SessionsManager, must_inspect_strings: bool):
+def _process_packets_from(packets_input: Capture, manager: SessionsManager, must_inspect_strings: bool = False):
     """
     Loops over available packets, retrieves its session and handles potential exceptions.
 
@@ -131,7 +131,8 @@ def _process_packets_from(packets_input: Capture, manager: SessionsManager, must
         clean_before_exit()
 
 
-def process_pcap(filename: str, must_inspect_strings=False, tshark_filter=None, debug=False, decode_as=None) -> SessionsManager:
+def process_pcap(filename: str, must_inspect_strings=False, tshark_filter=None, debug=False,
+                 decode_as=None, creds_found_callback=None) -> SessionsManager:
     """
     Initialize the processing of a pcap file and retrieve results of the analysis.
     This is one of the main entry points most people will want to use.
@@ -154,6 +155,9 @@ def process_pcap(filename: str, must_inspect_strings=False, tshark_filter=None, 
     decode_as : Dict[str, str]
         Associate a protocol to a port so that tshark processes packets correctly.
 
+    creds_found_callback : Callable[[Credentials], None]
+        The function to call every time new credentials are found. Credentials are passed as parameter.
+
     Returns
     -------
     A `SessionsManager` instance which gives to ability to the user of that function to retrieve
@@ -162,6 +166,7 @@ def process_pcap(filename: str, must_inspect_strings=False, tshark_filter=None, 
 
     logger.DEBUG_MODE = debug
     sessions_manager = SessionsManager()
+    Session.creds_found_callback = creds_found_callback
 
     with pyshark.FileCapture(filename, display_filter=tshark_filter, decode_as=decode_as, debug=debug) as pcap:
         logger.info("Processing packets in '{}'".format(filename))
@@ -184,7 +189,8 @@ def process_pcap(filename: str, must_inspect_strings=False, tshark_filter=None, 
     return sessions_manager
 
 
-def active_processing(interface: str, must_inspect_strings=False, tshark_filter=None, debug=False, decode_as=None, pcap_output=None):
+def active_processing(interface: str, must_inspect_strings=False, tshark_filter=None, debug=False, decode_as=None,
+                      pcap_output=None, creds_found_callback=None):
     """
     Initialize packets capturing on a given interface file.
     This is one of the main entry points most people will want to use.
@@ -209,11 +215,15 @@ def active_processing(interface: str, must_inspect_strings=False, tshark_filter=
 
     pcap_output : str
         Captured packets will be output to that file path.
+
+    creds_found_callback : Callable[[Credentials], None]
+        The function to call every time new credentials are found. Credentials are passed as parameter.
     """
 
     logger.DEBUG_MODE = debug
 
     sessions = SessionsManager(remove_outdated=True)
+    Session.creds_found_callback = creds_found_callback
 
     signal.signal(signal.SIGINT, signal_handler)
 
