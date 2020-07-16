@@ -23,6 +23,7 @@ jobs:
     if: tag IS present
     all_branches: true
     python: "3.8"
+    script: skip
     before_deploy:
       - make -C docs html
       - touch docs/_build/html/.nojekyll
