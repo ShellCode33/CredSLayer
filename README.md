@@ -34,7 +34,7 @@ Right now, CredSLayer supports the following protocols:
 
 It is also able to look for email addresses and credit card numbers.
 
-**Note:** To prevent false positives and performance issues, tshark (the Wireshark underlying engine) identifies protocols based on port numbers to know which dissector to use on which packets. A few protocols however have heuristic analysis to guess the protocol on different ports than the usual ones (such as HTTP). To address this issue, CredSLayer has a `--map` parameter, it enables you to map a (range of) port(s) to a specific protocol. This way you will be able to sniff credentials going to a specific service on a specific port you are aware of.  
+**Note:** To prevent false positives and performance issues, tshark (the Wireshark underlying engine) identifies protocols based on port numbers to know which dissector to use on which packets. A few protocols however have heuristic analysis to guess the protocol on different ports than the usual ones (such as HTTP). See the [limitation chapter](https://shellcode33.github.io/CredSLayer/getting-started/limitations.html) in the documentation. To address this issue, CredSLayer has a `--map` parameter, it enables you to map a (range of) port(s) to a specific protocol. This way you will be able to sniff credentials going to a specific service on a specific port you are aware of.
 
 # Install
 
