@@ -1,0 +1,373 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Sessions &mdash; CredSLayer 1.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Parsers" href="parsers.html" />
+    <link rel="prev" title="Code explanations" href="../code-explanations.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: darkred" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home" alt="Documentation Home"> CredSLayer
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../getting-started/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../getting-started/usage-cli.html">The command line</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../getting-started/usage-own-project.html">Use in your own project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../getting-started/limitations.html">Limitations</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Contribute</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../setup.html">Environment setup</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../code-explanations.html">Code explanations</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Sessions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parsers.html">Parsers</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../create-parser.html">Tutorial : new parser</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">CredSLayer</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../code-explanations.html">Code explanations</a> &raquo;</li>
+        
+      <li>Sessions</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../../_sources/contribute/code/sessions.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="sessions">
+<h1>Sessions<a class="headerlink" href="#sessions" title="Permalink to this headline">¶</a></h1>
+<p>CredSLayer’s sessions is probably the most important concept, it helps you create a context between loads of packets you “receive”.
+It will hold credentials you find and enables parsers to keep variables across per-packet analysis.</p>
+<p>For example in telnet, data are transmitted line by line, and sometimes character by character.
+So the parser gathers those pieces of information and store them in a session variable that will be available to further packets belonging to the same session :</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">session</span><span class="p">[</span><span class="s2">&quot;data_being_built&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">data</span>
+</pre></div>
+</div>
+<p>The lines that follow are directly taken from the code’s documentation and explain more in depth how sessions work.</p>
+<span class="target" id="module-credslayer.core.session"></span><dl class="py class">
+<dt id="credslayer.core.session.Session">
+<em class="property">class </em><code class="sig-name descname">Session</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">packet</span><span class="p">:</span> <span class="n">pyshark.packet.packet.Packet</span></em><span class="sig-paren">)</span><a class="headerlink" href="#credslayer.core.session.Session" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <cite>Session</cite> object represents an exchange of packets between two parties. TCP and UDP communication are not
+considered in the same way. Put simply a session is a way of grouping packets together in order to create some
+context. CredSLayer identifies a TCP exchange based on the IP addresses and port of each party.
+Here’s an example of its string representation : “192.168.1.42:42000 &lt;-&gt; 42.42.42.42:443”
+This representation is the identity of a session, it’s what makes it unique. On the other hand, UDP being a
+stateless protocol, its source port cannot be relied on because it is always different. That’s why CredSLayer
+builds UDP sessions based on the source address and the destination address and port.
+Here’s a example of its string representation : “192.168.1.42 &lt;-&gt; 42.42.42.42:53”</p>
+<dl class="py attribute">
+<dt id="credslayer.core.session.Session.protocol">
+<code class="sig-name descname">protocol</code><a class="headerlink" href="#credslayer.core.session.Session.protocol" title="Permalink to this definition">¶</a></dt>
+<dd><p>The identified protocol, at first it will either be TCP or UDP, but it can be updated at any time to be more
+specific about what the protocol being analysed really is.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="credslayer.core.session.Session.credentials_being_built">
+<code class="sig-name descname">credentials_being_built</code><a class="headerlink" href="#credslayer.core.session.Session.credentials_being_built" title="Permalink to this definition">¶</a></dt>
+<dd><p>Credentials going over the wire are often split into multiple packets (e.g. the username in a first packet,
+then the password in a second one), this is why each <cite>Session</cite> object has an instance of the <cite>Credentials</cite>
+object which will hold all the information being gathered to compose the credentials over time.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>Credentials</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="credslayer.core.session.Session.credentials_list">
+<code class="sig-name descname">credentials_list</code><a class="headerlink" href="#credslayer.core.session.Session.credentials_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>A list of credentials found so far in the session. Most of the time it will only hold a single <cite>Credentials</cite>
+instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>List[Credentials]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="field-list simple">
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#credslayer.core.session.SessionException" title="credslayer.core.session.SessionException"><strong>SessionException</strong></a> – This exception will occur if the session relative to a packet cannot be  built (mostly because the packet
+    isn’t TCP or UDP based).</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="credslayer.core.session.Session.invalidate_credentials_and_clear_session">
+<code class="sig-name descname">invalidate_credentials_and_clear_session</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#credslayer.core.session.Session.invalidate_credentials_and_clear_session" title="Permalink to this definition">¶</a></dt>
+<dd><p>At some point, a CredSLayer parser should be able to identify that an unsuccessful authentication has been made,
+to tell CredSLayer the <cite>credentials_being_built</cite> are invalid and what it contains must be discarded, this method
+must be called. This will create a new instance of <cite>Credentials</cite> in order to build new potential incoming
+credentials of the same session.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="credslayer.core.session.Session.validate_credentials">
+<code class="sig-name descname">validate_credentials</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#credslayer.core.session.Session.validate_credentials" title="Permalink to this definition">¶</a></dt>
+<dd><p>At some point, a CredSLayer parser should be able to identify that a successful authentication has been made,
+to tell CredSLayer the <cite>credentials_being_built</cite> are valid, this method must be called. This will create a new
+instance of <cite>Credentials</cite> in order to build new potential incoming credentials of the same session.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py exception">
+<dt id="credslayer.core.session.SessionException">
+<em class="property">exception </em><code class="sig-name descname">SessionException</code><a class="headerlink" href="#credslayer.core.session.SessionException" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exception related to the <cite>Session</cite> class.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt id="credslayer.core.session.SessionsManager">
+<em class="property">class </em><code class="sig-name descname">SessionsManager</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">remove_outdated</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#credslayer.core.session.SessionsManager" title="Permalink to this definition">¶</a></dt>
+<dd><p>The <cite>SessionsManager</cite> object is basically a list of <cite>Session</cite> objects, it will most likely be created once and be
+used during the whole program’s lifespan. It ensures the uniqueness of a <cite>Session</cite>, can delete outdated sessions and
+enables the developer to retrieve data about all the sessions at once (e.g. all credentials found so far).</p>
+<dl class="py method">
+<dt id="credslayer.core.session.SessionsManager.get_list_of_all_credentials">
+<code class="sig-name descname">get_list_of_all_credentials</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; List<span class="p">[</span>credslayer.core.utils.Credentials<span class="p">]</span><a class="headerlink" href="#credslayer.core.session.SessionsManager.get_list_of_all_credentials" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>A list of all valid <cite>Credentials</cite> instances built during the whole <cite>SessionManager</cite> lifespan.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>List[Credentials]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="credslayer.core.session.SessionsManager.get_remaining_content">
+<code class="sig-name descname">get_remaining_content</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; List<span class="p">[</span>Tuple<span class="p">[</span><a class="reference internal" href="#credslayer.core.session.Session" title="credslayer.core.session.Session">credslayer.core.session.Session</a><span class="p">, </span>credslayer.core.utils.Credentials<span class="p">]</span><span class="p">]</span><a class="headerlink" href="#credslayer.core.session.SessionsManager.get_remaining_content" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sometimes CredSLayer parsers are not able to tell if the provided credentials were valid or not, the <cite>Session</cite>
+instance still conserves those, and this method is here to return what’s remaining in all sessions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Each entry is a tuple of the <cite>Session</cite> instance and the remaining <cite>credentials_being_built</cite>.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>List[Tuple[<a class="reference internal" href="#credslayer.core.session.Session" title="credslayer.core.session.Session">Session</a>, Credentials]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="credslayer.core.session.SessionsManager.get_session_of">
+<code class="sig-name descname">get_session_of</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">packet</span><span class="p">:</span> <span class="n">pyshark.packet.packet.Packet</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#credslayer.core.session.Session" title="credslayer.core.session.Session">credslayer.core.session.Session</a><a class="headerlink" href="#credslayer.core.session.SessionsManager.get_session_of" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>packet</strong> (<em>Packet</em>) – The packet from which the <cite>Session</cite> object will be created or retrieved.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>This method returns the <cite>Session</cite> object associated to the given packet.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#credslayer.core.session.Session" title="credslayer.core.session.Session">Session</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt id="credslayer.core.session.stop_managed_sessions">
+<code class="sig-name descname">stop_managed_sessions</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#credslayer.core.session.stop_managed_sessions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Will stop threads managing sessions.</p>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="parsers.html" class="btn btn-neutral float-right" title="Parsers" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="../code-explanations.html" class="btn btn-neutral float-left" title="Code explanations" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, ShellCode
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

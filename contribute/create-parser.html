@@ -1,0 +1,288 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Tutorial : new parser &mdash; CredSLayer 1.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="Parsers" href="code/parsers.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: darkred" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home" alt="Documentation Home"> CredSLayer
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/usage-cli.html">The command line</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/usage-own-project.html">Use in your own project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started/limitations.html">Limitations</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Contribute</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="setup.html">Environment setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="code-explanations.html">Code explanations</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Tutorial : new parser</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">CredSLayer</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Tutorial : new parser</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/contribute/create-parser.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="tutorial-new-parser">
+<h1>Tutorial : new parser<a class="headerlink" href="#tutorial-new-parser" title="Permalink to this headline">¶</a></h1>
+<p>Create a new file in <code class="docutils literal notranslate"><span class="pre">credslayer/parsers/</span></code> named after the protocol you want to analyse. Usually you want to name your file the same as the <cite>Protocol</cite> column in wireshark.</p>
+<a class="reference internal image-reference" href="../_images/wireshark_protocol_column.png"><img alt="Wireshark protocol column" src="../_images/wireshark_protocol_column.png" style="width: 800px;" /></a>
+<p>But sometimes it won’t work, so you might wanna check the name of the protocol by searching it using the following command line :</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ tshark -G protocols | grep -i SEARCH_HERE | awk &#39;{print $NF}&#39;
+</pre></div>
+</div>
+<p>You now have to implement the following function that CredSLayer will automatically call for each incoming packet of your choosen protocol :</p>
+<dl class="py function">
+<dt id="credslayer.parsers.ftp.analyse">
+<code class="sig-name descname">analyse</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">session</span><span class="p">:</span> <span class="n"><a class="reference internal" href="code/sessions.html#credslayer.core.session.Session" title="credslayer.core.session.Session">credslayer.core.session.Session</a></span></em>, <em class="sig-param"><span class="n">layer</span><span class="p">:</span> <span class="n">pyshark.packet.layer.Layer</span></em><span class="sig-paren">)</span><a class="headerlink" href="#credslayer.parsers.ftp.analyse" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>Let’s just take the ftp parser as an example, just read the comments :)</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># coding: utf-8</span>
+
+<span class="kn">from</span> <span class="nn">pyshark.packet.layer</span> <span class="kn">import</span> <span class="n">Layer</span>
+
+<span class="kn">from</span> <span class="nn">credslayer.core</span> <span class="kn">import</span> <span class="n">logger</span>
+<span class="kn">from</span> <span class="nn">credslayer.core.session</span> <span class="kn">import</span> <span class="n">Session</span>
+
+
+<span class="c1"># Remember this function is called for every single packet that belong to the protocol</span>
+<span class="k">def</span> <span class="nf">analyse</span><span class="p">(</span><span class="n">session</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span> <span class="n">layer</span><span class="p">:</span> <span class="n">Layer</span><span class="p">):</span>
+
+    <span class="c1"># You can use the pretty_print method to show what&#39;s in the packet</span>
+    <span class="c1"># layer.pretty_print()</span>
+
+    <span class="c1"># Just an alias of credentials_being_built</span>
+    <span class="n">current_creds</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">credentials_being_built</span>
+
+    <span class="c1"># We check (using pyshark&#39;s layer object) if the packet contains a &quot;reponse_code&quot; field.</span>
+    <span class="c1"># This is the name tshark gave to the portion of the packet holding the response code.</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="s2">&quot;response_code&quot;</span><span class="p">):</span>
+        <span class="n">code</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">response_code</span><span class="p">)</span>
+
+        <span class="c1"># Code 230 means authentication has been successful</span>
+        <span class="k">if</span> <span class="n">code</span> <span class="o">==</span> <span class="mi">230</span> <span class="ow">and</span> <span class="n">current_creds</span><span class="o">.</span><span class="n">username</span><span class="p">:</span>
+            <span class="c1"># That&#39;s how you log credentials you&#39;ve just found</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">found</span><span class="p">(</span><span class="n">session</span><span class="p">,</span> <span class="s2">&quot;credentials found: </span><span class="si">{}</span><span class="s2"> -- </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">current_creds</span><span class="o">.</span><span class="n">username</span><span class="p">,</span> <span class="n">current_creds</span><span class="o">.</span><span class="n">password</span><span class="p">))</span>
+
+            <span class="c1"># That&#39;s how you tell CredsLayer to remove the context and credentials currently being built.</span>
+            <span class="c1"># You found everything you needed, you&#39;re done with everything you saved in the session.</span>
+            <span class="n">session</span><span class="o">.</span><span class="n">validate_credentials</span><span class="p">()</span>
+
+        <span class="c1"># Code 430 means credentials were wrong</span>
+        <span class="k">elif</span> <span class="n">code</span> <span class="o">==</span> <span class="mi">430</span><span class="p">:</span>
+            <span class="c1"># That&#39;s also how you tell CredsLayer to remove the context and credentials currently being built.</span>
+            <span class="c1"># You just found out credentials were wrong, you&#39;re not interested in what you saved in the session.</span>
+            <span class="n">session</span><span class="o">.</span><span class="n">invalidate_credentials_and_clear_session</span><span class="p">()</span>
+
+    <span class="c1"># We check (using pyshark&#39;s layer object) if the packet contains a &quot;request_command&quot; field,</span>
+    <span class="c1"># This is the name tshark gave to the portion of the packet holding the FTP command.</span>
+    <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="s2">&quot;request_command&quot;</span><span class="p">):</span>
+        <span class="n">command</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">request_command</span>
+
+        <span class="c1"># The username is sent next to the &quot;USER&quot; command.</span>
+        <span class="c1"># We store the username in `current_creds`, which is the alias for the credentials being built in the session.</span>
+        <span class="k">if</span> <span class="n">command</span> <span class="o">==</span> <span class="s2">&quot;USER&quot;</span><span class="p">:</span>
+            <span class="n">current_creds</span><span class="o">.</span><span class="n">username</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">request_arg</span>
+
+        <span class="c1"># Idem with the password</span>
+        <span class="k">elif</span> <span class="n">command</span> <span class="o">==</span> <span class="s2">&quot;PASS&quot;</span><span class="p">:</span>
+            <span class="n">current_creds</span><span class="o">.</span><span class="n">password</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">request_arg</span>
+</pre></div>
+</div>
+<p>I really encourage you to read about <a class="reference internal" href="code/sessions.html#sessions"><span class="std std-ref">Sessions</span></a> as this is what enables you to build a persistent context across each call to your <em>analyse</em> function.
+For example in FTP, the username is first sent in a packet, then the password in another one. Thanks to the <a class="reference internal" href="code/sessions.html#sessions"><span class="std std-ref">Sessions</span></a> object, you will be able to keep track
+of some valuable data. Then somehow (depending on the protocol you are analysing) you might receive an indicator of success or failure, in FTP codes 230 and 430 fulfill that purpose.
+When you find such an indicator, you must call <code class="docutils literal notranslate"><span class="pre">session.invalidate_credentials_and_clear_session</span></code> or <code class="docutils literal notranslate"><span class="pre">session.validate_credentials</span></code> to tell CredSLayer you’re done with those credentials.</p>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="code/parsers.html" class="btn btn-neutral float-left" title="Parsers" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, ShellCode
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
