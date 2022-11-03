@@ -35,7 +35,7 @@ def analyse(session: Session, layer: BaseLayer):
     current_creds = session.credentials_being_built
 
     if current_creds and hasattr(layer, "nt_status"):
-        status = int(layer.nt_status)
+        status = int(layer.nt_status, 16)
 
         if status == 0:  # LOGON SUCCESS
             logger.found(session, "{} found: {}".format(current_creds.context["version"], current_creds.hash))
