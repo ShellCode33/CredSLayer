@@ -3,7 +3,7 @@
 import base64
 from typing import Tuple
 
-from pyshark.packet.layer import Layer
+from pyshark.packet.layers.base import BaseLayer
 
 from credslayer.core import logger
 from credslayer.core.session import Session
@@ -30,7 +30,7 @@ def _fix_tshark_widechar_issue(layer) -> Tuple[str, str]:
 
 # Great resource : http://davenport.sourceforge.net/ntlm.html#theNtlmv2Response
 
-def analyse(session: Session, layer: Layer):
+def analyse(session: Session, layer: BaseLayer):
 
     current_creds = session.credentials_being_built
 
