@@ -3,7 +3,7 @@
 import base64
 from urllib.parse import parse_qs
 
-from pyshark.packet.layer import Layer
+from pyshark.packet.layers.base import BaseLayer
 
 from credslayer.core import logger
 from credslayer.core.session import Session
@@ -26,7 +26,7 @@ HTTP_AUTH_POTENTIAL_PASSWORDS = ['ahd_password', 'pass', 'password', '_password'
                                  'j_password']
 
 
-def analyse(session: Session, layer: Layer):
+def analyse(session: Session, layer: BaseLayer):
 
     current_creds = session.credentials_being_built
 

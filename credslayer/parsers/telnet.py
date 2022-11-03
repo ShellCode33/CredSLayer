@@ -1,5 +1,5 @@
 # coding: utf-8
-from pyshark.packet.layer import Layer
+from pyshark.packet.layers.base import BaseLayer
 
 from credslayer.core import logger
 from credslayer.core.session import Session
@@ -27,7 +27,7 @@ def _is_username_duplicated(username: str) -> bool:
     return True
 
 
-def analyse(session: Session, layer: Layer):
+def analyse(session: Session, layer: BaseLayer):
 
     if not hasattr(layer, "data"):
         return

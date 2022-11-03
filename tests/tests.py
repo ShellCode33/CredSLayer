@@ -76,13 +76,25 @@ class ParsersTest(unittest.TestCase):
     def test_http_post_auth(self):
         credentials_list = process_pcap("samples/http-post-auth.pcap").get_list_of_all_credentials()
         print(credentials_list)
-        self.assertTrue(Credentials('toto', 'Str0ngP4ssw0rd') in credentials_list)
+        self.assertTrue(
+            Credentials(
+                'toto',
+                'Str0ngP4ssw0rd',
+                context={'Method': 'POST', 'URL': 'http://192.168.56.101:1337/login'}
+            ) in credentials_list
+        )
         self.assertTrue(len(credentials_list) == 1)
 
     def test_http_get_auth(self):
         credentials_list = process_pcap("samples/http-get-auth.pcap").get_list_of_all_credentials()
         print(credentials_list)
-        self.assertTrue(Credentials('admin', 'qwerty1234') in credentials_list)
+        self.assertTrue(
+                Credentials(
+                    'admin', 
+                    'qwerty1234', 
+                    context={'Method': 'GET', 'URL': 'http://192.168.56.101:1337/login?login=admin&password=qwerty1234'}
+                ) in credentials_list
+        )
         self.assertTrue(len(credentials_list) == 1)
 
     def test_ldap(self):
@@ -180,7 +192,7 @@ class ParsersTest(unittest.TestCase):
         self.assertTrue(len(remaining_credentials) == 6)
         self.assertTrue(Credentials(hash="administrator::example:ea46e3a07ea448d200000000000000000000000000000000:"
                                          "4d626ea83a02eee710571a2b84241788bd21e3a66ddbf4a5"
-                                         ":CHALLENGE_NOT_FOUND") in remaining_credentials)
+                                         ":CHALLENGE_NOT_FOUND", context={'version': 'NETNTLMv1'}) in remaining_credentials)
 
 
 class ManagerTest(unittest.TestCase):
